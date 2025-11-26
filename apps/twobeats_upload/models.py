@@ -1,8 +1,9 @@
 from django.db import models
 from django.conf import settings
 
+# tag 미리 설정한 파일은 management/commands/init_tags.py 참고 / 25.11.26 Lim
 class Tag(models.Model):
-    """태그 (음악/영상 공통)"""
+    """태그 (관리자가 미리 생성, 사용자는 선택만)"""
     
     name = models.CharField(
         max_length=50,
@@ -15,6 +16,7 @@ class Tag(models.Model):
         db_table = 'tag_table'
         verbose_name = '태그'
         verbose_name_plural = '태그'
+        ordering = ['name']
     
     def __str__(self):
         return self.name
@@ -31,10 +33,28 @@ class Music(models.Model):
         max_length=100,
         verbose_name='가수'
     )
+
+    # 장르 (선택형 - 하나만 선택!)
+    GENRE_CHOICES = [
+        ('ballad', '발라드'),
+        ('dance', '댄스'),
+        ('hiphop', '힙합'),
+        ('rnb', 'R&B'),
+        ('rock', '록'),
+        ('pop', '팝'),
+        ('indie', '인디'),
+        ('trot', '트로트'),
+        ('jazz', '재즈'),
+        ('ost', 'OST'),
+        ('etc', '기타'),
+    ]
+    
     music_type = models.CharField(
-        max_length=50,
+        max_length=20,
+        choices=GENRE_CHOICES,
         verbose_name='장르'
     )
+
     music_root = models.FileField(
         upload_to='music/',
         verbose_name='음원파일'
@@ -65,11 +85,12 @@ class Music(models.Model):
         db_column='music_user_id'
     )
     
-    # 태그 (다대다)
+    # 태그 (ManyToMany)
     tags = models.ManyToManyField(
         Tag,
         blank=True,
-        related_name='musics'
+        related_name='musics',
+        verbose_name='태그'
     )
     
     # 날짜
@@ -103,10 +124,23 @@ class Video(models.Model):
         max_length=100,
         verbose_name='아티스트'
     )
+
+    GENRE_CHOICES = [
+        ('mv', '뮤직비디오'),
+        ('performance', '퍼포먼스'),
+        ('live', '라이브'),
+        ('cover', '커버'),
+        ('dance', '댄스 영상'),
+        ('documentary', '다큐멘터리'),
+        ('behind', '비하인드'),
+        ('etc', '기타'),
+    ]
     video_type = models.CharField(
-        max_length=50,
+        max_length=20,
+        choices=GENRE_CHOICES,
         verbose_name='장르'
     )
+
     video_root = models.FileField(
         upload_to='videos/',
         verbose_name='영상파일'
@@ -145,11 +179,12 @@ class Video(models.Model):
         db_column='video_user_id'
     )
     
-    # 태그
+    # 태그 (ManyToMany)
     tags = models.ManyToManyField(
         Tag,
         blank=True,
-        related_name='videos'
+        related_name='videos',
+        verbose_name='태그'
     )
     
     # 날짜

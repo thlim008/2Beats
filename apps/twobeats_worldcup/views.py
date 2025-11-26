@@ -1,6 +1,6 @@
 import math
 import random
-from django.db.models import Sum
+from django.db.models import Sum, Count, Q
 from django.db.models.functions import Coalesce
 from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny
@@ -158,3 +158,33 @@ def game_page(request):
     """월드컵 게임 화면 렌더링"""
     return render(request, 'twobeats_worldcup/game.html')
     
+def ranking_page(request):
+    """
+    명예의 전당 (랭킹 페이지) - 장르 필터 추가
+    URL: /worldcup/ranking/?genre=ballad
+    """
+    # 1. 파라미터 받기
+    selected_genre = request.GET.get('genre', 'all')
+    
+    # 2. 기본 쿼리셋 (점수 계산)
+    rankings = Music.objects.annotate(
+        total_score=Coalesce(Sum('worldcupresult__wc_score'), 0),
+        win_count=Count('worldcupresult', filter=Q(worldcupresult__wc_final_rank=1))
+    ).filter(
+        total_score__gt=0 # 0점 제외
+    )
+
+    # 3. 장르 필터링 적용
+    if selected_genre != 'all':
+        rankings = rankings.filter(music_type=selected_genre)
+
+    # 4. 정렬 (점수 > 우승횟수 > 최신순)
+    rankings = rankings.order_by('-total_score', '-win_count', '-music_created_at')[:100]
+
+    # 5. 템플릿에 보낼 데이터
+    context = {
+        'rankings': rankings,
+        'selected_genre': selected_genre,
+        'genres': Music.GENRE_CHOICES, # 장르 목록 (버튼 생성용)
+    }
+    return render(request, 'twobeats_worldcup/ranking.html', context)

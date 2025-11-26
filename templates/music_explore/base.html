@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TwoBeats{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        /* 네비게이션 */
+        nav {
+            background-color: #1a1a1a;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: #1db954;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1db954 !important;
+        }
+        
+        /* 컨테이너 */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        /* 카드 스타일 */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* 버튼 */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #1db954;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1ed760;
+        }
+        
+        .btn-secondary {
+            background-color: #535353;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #656565;
+        }
+        
+        /* 검색창 */
+        .search-box {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .search-box:focus {
+            border-color: #1db954;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 네비게이션 -->
+    <nav>
+        <ul>
+            <li><a href="/" class="logo">🎵 TwoBeats</a></li>
+            <li><a href="{% url 'music_explore:search' %}">검색</a></li>
+            <li><a href="{% url 'music_explore:chart_popular' %}">인기 차트</a></li>
+            <li><a href="{% url 'music_explore:chart_latest' %}">최신 차트</a></li>
+            <li><a href="{% url 'music_explore:chart_liked' %}">좋아요 차트</a></li>
+            
+            <li style="margin-left: auto;">
+                {% if user.is_authenticated %}
+                    <span style="color: #aaa;">{{ user.username }}님</span>
+                {% else %}
+                    <a href="/admin/">로그인</a>
+                {% endif %}
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

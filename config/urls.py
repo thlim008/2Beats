@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('music/', include('apps.twobeats_music_explore.urls')),
 ]
 
 if settings.DEBUG:

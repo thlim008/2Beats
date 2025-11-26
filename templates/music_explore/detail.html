@@ -1,0 +1,131 @@
+{% extends 'music_explore/base.html' %}
+
+{% block title %}{{ music.music_title }} - TwoBeats{% endblock %}
+
+{% block content %}
+<!-- 음악 정보 -->
+<div class="card">
+    <div style="display: flex; gap: 2rem; align-items: start;">
+        <!-- 썸네일 -->
+        <div style="min-width: 250px;">
+            {% if music.music_thumbnail %}
+                <img src="{{ music.music_thumbnail.url }}" 
+                     alt="{{ music.music_title }}"
+                     style="width: 100%; border-radius: 8px;">
+            {% else %}
+                <div style="
+                    width: 250px; 
+                    height: 250px; 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 4rem;
+                ">
+                    🎵
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- 정보 -->
+        <div style="flex: 1;">
+            <h1 style="margin-bottom: 0.5rem;">{{ music.music_title }}</h1>
+            <h2 style="color: #666; margin-bottom: 1.5rem;">{{ music.music_singer }}</h2>
+            
+            <p style="margin-bottom: 0.5rem;">
+                <strong>장르:</strong> {{ music.get_music_type_display }}
+            </p>
+            <p style="margin-bottom: 0.5rem;">
+                <strong>업로더:</strong> {{ music.uploader.username }}
+            </p>
+            <p style="margin-bottom: 0.5rem;">
+                <strong>재생수:</strong> {{ music.music_count }}회
+            </p>
+            <p style="margin-bottom: 1.5rem;">
+                <strong>좋아요:</strong> {{ music.music_like_count }}
+            </p>
+            
+            <!-- 태그 -->
+            {% if music.tags.all %}
+                <div style="margin-bottom: 1.5rem;">
+                    {% for tag in music.tags.all %}
+                        <span style="
+                            display: inline-block;
+                            background-color: #f0f0f0;
+                            padding: 0.3rem 0.8rem;
+                            border-radius: 15px;
+                            margin-right: 0.5rem;
+                            font-size: 0.9rem;
+                        ">
+                            #{{ tag.name }}
+                        </span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <!-- 버튼들 -->
+            <div style="display: flex; gap: 1rem;">
+                <!-- 좋아요 버튼 -->
+                <form method="POST" action="{% url 'music_explore:like' music.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn {% if is_liked %}btn-primary{% else %}btn-secondary{% endif %}">
+                        {% if is_liked %}❤️ 좋아요 취소{% else %}🤍 좋아요{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 댓글 -->
+<div class="card">
+    <h2 style="margin-bottom: 1.5rem;">💬 댓글 ({{ comments.count }})</h2>
+    
+    <!-- 댓글 작성 -->
+    {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'music_explore:comment' music.id %}" style="margin-bottom: 2rem;">
+            {% csrf_token %}
+            <textarea 
+                name="content" 
+                rows="3" 
+                class="search-box"
+                placeholder="댓글을 입력하세요..."
+                style="border-radius: 8px; margin-bottom: 0.5rem;"
+                required
+            ></textarea>
+            <button type="submit" class="btn btn-primary">댓글 작성</button>
+        </form>
+    {% else %}
+        <p style="text-align: center; color: #999; padding: 1rem; background-color: #f9f9f9; border-radius: 8px; margin-bottom: 2rem;">
+            댓글을 작성하려면 <a href="/admin/" style="color: #1db954;">로그인</a>하세요.
+        </p>
+    {% endif %}
+    
+    <!-- 댓글 목록 -->
+    {% if comments %}
+        <div style="display: grid; gap: 1rem;">
+            {% for comment in comments %}
+                <div style="
+                    padding: 1rem;
+                    border-left: 3px solid #1db954;
+                    background-color: #f9f9f9;
+                    border-radius: 4px;
+                ">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <strong>{{ comment.user.username }}</strong>
+                        <span style="color: #999; font-size: 0.9rem;">
+                            {{ comment.created_at|date:"Y-m-d H:i" }}
+                        </span>
+                    </div>
+                    <p>{{ comment.content }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #999; padding: 2rem;">
+            첫 댓글을 작성해보세요!
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

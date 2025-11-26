@@ -1,0 +1,116 @@
+<!-- templates/music_explore/search.html -->
+
+{% extends 'music_explore/base.html' %}
+
+{% block title %}음악 검색 - TwoBeats{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 1.5rem;">🔍 음악 검색</h1>
+    
+    <!-- 검색 폼 -->
+    <form method="GET" action="{% url 'music_explore:search' %}">
+        <!-- 제목/가수 검색 -->
+        <div style="margin-bottom: 1rem;">
+            <input 
+                type="text" 
+                name="q" 
+                class="search-box" 
+                placeholder="제목, 가수 검색..." 
+                value="{{ query }}"
+            >
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <!-- 장르 필터 -->
+            <select name="genre" class="search-box">
+                <option value="">전체 장르</option>
+                <option value="ballad" {% if genre == 'ballad' %}selected{% endif %}>발라드</option>
+                <option value="dance" {% if genre == 'dance' %}selected{% endif %}>댄스</option>
+                <option value="hiphop" {% if genre == 'hiphop' %}selected{% endif %}>힙합</option>
+                <option value="rnb" {% if genre == 'rnb' %}selected{% endif %}>R&B</option>
+                <option value="rock" {% if genre == 'rock' %}selected{% endif %}>록</option>
+                <option value="pop" {% if genre == 'pop' %}selected{% endif %}>팝</option>
+                <option value="indie" {% if genre == 'indie' %}selected{% endif %}>인디</option>
+                <option value="trot" {% if genre == 'trot' %}selected{% endif %}>트로트</option>
+                <option value="jazz" {% if genre == 'jazz' %}selected{% endif %}>재즈</option>
+                <option value="ost" {% if genre == 'ost' %}selected{% endif %}>OST</option>
+                <option value="etc" {% if genre == 'etc' %}selected{% endif %}>기타</option>
+            </select>
+            
+            <!-- 태그 필터 (동적!) -->
+            <select name="tag" class="search-box">
+                <option value="">전체 태그</option>
+                {% for t in all_tags %}
+                    <option value="{{ t.name }}" {% if tag == t.name %}selected{% endif %}>
+                        #{{ t.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">검색</button>
+    </form>
+</div>
+
+<!-- 검색 결과 -->
+<div class="card">
+    <h2 style="margin-bottom: 1rem;">
+        {% if query or genre or tag %}
+            검색 결과 ({{ musics.count }}곡)
+            {% if query %}<span style="color: #1db954;"> - "{{ query }}"</span>{% endif %}
+            {% if genre %}<span style="color: #1db954;"> - 장르: {{ genre }}</span>{% endif %}
+            {% if tag %}<span style="color: #1db954;"> - 태그: #{{ tag }}</span>{% endif %}
+        {% else %}
+            전체 음악 ({{ musics.count }}곡)
+        {% endif %}
+    </h2>
+    
+    {% if musics %}
+        <div style="display: grid; gap: 1rem;">
+            {% for music in musics %}
+                <div style="
+                    padding: 1rem; 
+                    border: 1px solid #eee; 
+                    border-radius: 8px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    transition: all 0.3s;
+                " onmouseover="this.style.backgroundColor='#f9f9f9'" 
+                   onmouseout="this.style.backgroundColor='white'">
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">
+                            <a href="{% url 'music_explore:detail' music.id %}" 
+                               style="color: #333; text-decoration: none;">
+                                {{ music.music_title }}
+                            </a>
+                        </h3>
+                        <p style="color: #666;">{{ music.music_singer }}</p>
+                        <p style="color: #999; font-size: 0.9rem;">
+                            {{ music.get_music_type_display }} | 
+                            재생 {{ music.music_count }}회 | 
+                            좋아요 {{ music.music_like_count }}
+                            
+                            <!-- 태그 표시 -->
+                            {% if music.tags.all %}
+                                | 
+                                {% for mtag in music.tags.all %}
+                                    <span style="color: #1db954;">#{{ mtag.name }}</span>{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <a href="{% url 'music_explore:detail' music.id %}" class="btn btn-primary">
+                        재생 ▶
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #999; padding: 2rem;">
+            검색 결과가 없습니다.
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

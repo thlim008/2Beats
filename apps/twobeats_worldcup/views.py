@@ -206,7 +206,7 @@ def wc_popular(request):
         'chart_type': 'wc_popular',
         'chart_title': 'worldcup 상위 차트',
     }
-    return render(request, 'twobeats_worldcup\wc_chart.html', context)
+    return render(request, 'twobeats_worldcup/wc_chart.html', context)
 
             # top_candidates = base_musics.filter(music_type=genre).annotate(
             #     total_score=Coalesce(Sum('worldcupresult__wc_score'), 0)

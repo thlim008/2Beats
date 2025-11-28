@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>월드컵 결과 - 2Beats</title>
+    <style>
+        /* --- [공통 스타일] --- */
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        /* 우승자 카드 (금색 테두리 효과) */
+        .winner-section {
+            margin-bottom: 50px;
+            animation: popUp 0.8s ease-out;
+        }
+        .winner-badge {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            font-weight: bold;
+        }
+        .winner-card {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 20px;
+            padding: 5px; /* 테두리 두께 */
+            background-image: linear-gradient(45deg, #ffd700, #ffaa00, #ffd700); /* 금색 그라데이션 */
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            display: inline-block;
+        }
+        .winner-content {
+            background: #222;
+            border-radius: 18px;
+            padding: 20px;
+            width: 300px;
+        }
+        .winner-img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .winner-title { font-size: 1.5rem; margin: 10px 0; color: white; font-weight: bold; }
+        .winner-singer { color: #aaa; font-size: 1.1rem; margin: 0; }
+
+        /* 나머지 순위 리스트 */
+        h3 { color: #00ff88; margin-top: 40px; margin-bottom: 20px; text-align: left;}
+
+        .rank-list {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+            text-align: left;
+        }
+        .rank-item {
+            background: #1e1e1e;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #333;
+            transition: transform 0.2s;
+        }
+        .rank-item:hover { transform: translateX(5px); background: #2a2a2a; border-color: #555; }
+        
+        .rank-num {
+            font-size: 1.2rem;
+            font-weight: bold;
+            width: 50px;
+            text-align: center;
+        }
+        .rank-2 { color: #c0c0c0; } /* 은색 */
+        .rank-4 { color: #cd7f32; } /* 동색 */
+        
+        .mini-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            object-fit: cover;
+            background: #333;
+        }
+
+        /* 버튼 그룹 */
+        .btn-group {
+            margin-top: 40px;
+            margin-bottom: 60px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+        .btn-retry { background-color: #00ff88; color: black; }
+        .btn-retry:hover { background-color: #00cc6a; }
+        .btn-ranking { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-ranking:hover { background-color: #444; border-color: #777; }
+
+        @keyframes popUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="winner-section">
+        <div class="winner-badge">👑 최종 우승 (Winner)</div>
+        <div class="winner-card">
+            <div class="winner-content">
+                {% if winner.wc_music.music_thumbnail %}
+                    <img class="winner-img" src="{{ winner.wc_music.music_thumbnail.url }}" alt="winner">
+                {% else %}
+                    <div class="winner-img" style="background:#333;display:flex;align-items:center;justify-content:center;color:#666;">No Image</div>
+                {% endif %}
+                
+                <h2 class="winner-title">{{ winner.wc_music.music_title }}</h2>
+                <p class="winner-singer">{{ winner.wc_music.music_singer }}</p>
+            </div>
+        </div>
+    </div>
+
+    <h3>📜 플레이 히스토리</h3>
+    <ul class="rank-list">
+        {% for result in others %}
+        <li class="rank-item">
+            <div class="rank-num rank-{{ result.wc_final_rank }}">
+                {% if result.wc_final_rank == 2 %}🥈
+                {% elif result.wc_final_rank == 4 %}🥉
+                {% else %}{{ result.wc_final_rank }}강
+                {% endif %}
+            </div>
+            
+            {% if result.wc_music.music_thumbnail %}
+                <img class="mini-thumb" src="{{ result.wc_music.music_thumbnail.url }}" alt="thumb">
+            {% else %}
+                <div class="mini-thumb" style="display:flex;align-items:center;justify-content:center;font-size:0.7rem;">No Img</div>
+            {% endif %}
+
+            <div>
+                <div style="font-weight: bold;">{{ result.wc_music.music_title }}</div>
+                <div style="font-size: 0.9rem; color: #aaa;">{{ result.wc_music.music_singer }}</div>
+            </div>
+        </li>
+        {% empty %}
+        <p style="color:#666; text-align:center; padding:20px;">다른 결과가 없습니다.</p>
+        {% endfor %}
+    </ul>
+
+    <div class="btn-group">
+        <button class="btn-retry" onclick="location.href='{% url 'twobeats_worldcup:play' %}'">🔄 다시 하기</button>
+        <button class="btn-ranking" onclick="location.href='{% url 'twobeats_worldcup:ranking' %}'">🏆 랭킹 보기</button>
+    </div>
+</div>
+
+</body>
+</html>

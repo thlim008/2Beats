@@ -213,3 +213,19 @@ def wc_popular(request):
             # ).order_by('-total_score')[:count]
             # candidates = list(top_candidates)
             # random.shuffle(candidates)
+
+
+def result_page(request, game_id):
+    """월드컵 결과 페이지 렌더링"""
+    game = get_object_or_404(WorldCupGame, pk=game_id)
+    results = WorldCupResult.objects.filter(wc_game=game).select_related('wc_music').order_by('wc_final_rank')
+    
+    winner = results.first()
+    others = results[1:]
+    
+    context = {
+        'game': game,
+        'winner': winner,
+        'others': others,
+    }
+    return render(request, 'twobeats_worldcup/result.html', context)

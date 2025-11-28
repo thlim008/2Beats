@@ -15,22 +15,50 @@
             align-items: center;
         }
 
-        h1 { color: #00ff88; margin-bottom: 40px; font-size: 2.5rem; text-align: center; }
-
         .ranking-wrapper {
             display: flex;
-            flex-direction: column; /* 무조건 위->아래로 쌓임 */
-            align-items: center;    /* 가운데 정렬 */
+            flex-direction: column;
+            align-items: center;
             width: 100%;
-            max-width: 1200px;      /* 너무 퍼지지 않게 제한 */
-            margin: 0 auto;         /* 화면 중앙 배치 */
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 { color: #00ff88; margin-bottom: 20px; font-size: 2.5rem; text-align: center; }
+
+        /* 장르 네비게이션 스타일 */
+        .genre-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            max-width: 800px;
+        }
+        .genre-btn {
+            padding: 8px 16px;
+            background-color: #333;
+            color: #ccc;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .genre-btn:hover { background-color: #444; color: white; }
+        .genre-btn.active {
+            background-color: #00ff88;
+            color: black;
+            font-weight: bold;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
 
         /* 상위 3개 카드 스타일 */
         .top-rank-container {
             display: flex;
             justify-content: center;
-            align-items: flex-end; /* 2,3등은 조금 낮게 */
+            align-items: flex-end;
             gap: 20px;
             margin-bottom: 50px;
             flex-wrap: wrap;
@@ -47,18 +75,22 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
-        .top-card img {
+        /* ✅ [수정] 이미지 스타일을 공통 클래스로 관리 */
+        .top-card-img {
             width: 100%;
             height: 200px;
             object-fit: cover;
             border-radius: 10px;
             margin-bottom: 15px;
+            background-color: #333; /* 이미지가 없을 때 배경색 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
         }
 
-        /* 1등 강조 */
         .rank-1 { 
-            order: 2; /* 가운데 배치 */
-            transform: scale(1.1); 
+            order: 2; transform: scale(1.1); 
             border: 3px solid #ffd700;
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
         }
@@ -90,6 +122,7 @@
             display: inline-block;
             font-size: 0.8rem;
             color: #00ff88;
+            font-weight: bold;
         }
 
         /* 4위 이하 리스트 스타일 */
@@ -110,10 +143,29 @@
         tr:hover { background: #2a2a2a; }
         
         .td-info { text-align: left; display: flex; align-items: center; gap: 15px; }
-        .mini-thumb { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
         
+        /* ✅ [수정] 작은 썸네일 스타일 */
+        .mini-thumb { 
+            width: 50px; height: 50px; 
+            border-radius: 5px; 
+            object-fit: cover; 
+            background-color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #666;
+        }
+        
+        .bottom-btn-area {
+            margin-top: 50px;
+            margin-bottom: 50px;
+            width: 100%;
+            text-align: center;
+            display: block;
+        }
+
         .btn-home {
-            margin-top: 40px;
             padding: 15px 40px;
             background: #00ff88;
             color: black;
@@ -126,122 +178,94 @@
         }
         .btn-home:hover { background: #00cc6a; }
 
-        .genre-nav {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 30px;
-            max-width: 800px;
-        }
-
-        .genre-btn {
-            padding: 8px 16px;
-            background-color: #333;
-            color: #ccc;
-            text-decoration: none;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            transition: 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .genre-btn:hover {
-            background-color: #444;
-            color: white;
-        }
-
-        /* 선택된 버튼 강조 (초록색) */
-        .genre-btn.active {
-            background-color: #00ff88;
-            color: black;
-            font-weight: bold;
-            border-color: #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-        }
-
-        .bottom-btn-area {
-            margin-top: 50px;  /* 목록과의 간격 */
-            margin-bottom: 50px; /* 바닥과의 간격 */
-            width: 100%;
-            text-align: center; /* 가운데 정렬 */
-            display: block;    /* 블록 요소로 만들어서 줄바꿈 강제 */
-        }
-
     </style>
 </head>
 <body>
 
-<div class="ranking-wrapper">
-    <h1>🏆 명예의 전당 (Hall of Fame)</h1>
+    <div class="ranking-wrapper">
+
+        <h1>🏆 명예의 전당 (Hall of Fame)</h1>
+
         <div class="genre-nav">
-        <a href="?genre=all" class="genre-btn {% if selected_genre == 'all' %}active{% endif %}">
-            전체
-        </a>
-        {% for code, name in genres %}
-        <a href="?genre={{ code }}" class="genre-btn {% if selected_genre == code %}active{% endif %}">
-            {{ name }}
-        </a>
-        {% endfor %}
+            <a href="?genre=all" class="genre-btn {% if selected_genre == 'all' %}active{% endif %}">
+                전체
+            </a>
+            {% for code, name in genres %}
+            <a href="?genre={{ code }}" class="genre-btn {% if selected_genre == code %}active{% endif %}">
+                {{ name }}
+            </a>
+            {% endfor %}
         </div>
 
         <div class="top-rank-container">
+            {% for music in rankings|slice:":3" %}
+            <div class="top-card rank-{{ forloop.counter }}">
+                <div class="medal">
+                    {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}
+                </div>
+                
+                {% if music.music_thumbnail %}
+                    <img src="{{ music.music_thumbnail.url }}" alt="cover" class="top-card-img">
+                {% else %}
+                    <div class="top-card-img">No Img</div>
+                {% endif %}
 
-    <div class="top-rank-container">
-        {% for music in rankings|slice:":3" %}
-        <div class="top-card rank-{{ forloop.counter }}">
-            <div class="medal">
-                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}
-            </div>
-            <img src="{{ music.music_thumbnail.url }}" alt="cover">
-            <div class="music-info">
-                <h3>{{ music.music_title }}</h3>
-                <p>{{ music.music_singer }}</p>
-                <div class="score-badge">
-                    ⭐ {{ music.total_score }}점 ({{ music.win_count }}회 우승)
+                <div class="music-info">
+                    <h3>{{ music.music_title }}</h3>
+                    <p>{{ music.music_singer }}</p>
+                    <div class="score-badge">
+                        ⭐ {{ music.total_score }}점 ({{ music.win_count }}회 우승)
+                    </div>
                 </div>
             </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <table class="rank-table">
-        <thead>
-            <tr>
-                <th width="80">순위</th>
-                <th>곡 정보</th>
-                <th width="150">우승 횟수</th>
-                <th width="150">총점</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for music in rankings|slice:"3:" %}
-            <tr>
-                <td>{{ forloop.counter|add:3 }}위</td>
-                <td>
-                    <div class="td-info">
-                        <img src="{{ music.music_thumbnail.url }}" class="mini-thumb">
-                        <div>
-                            <div style="font-weight:bold;">{{ music.music_title }}</div>
-                            <div style="color:#888; font-size:0.9rem;">{{ music.music_singer }}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>{{ music.win_count }}회</td>
-                <td style="color: #00ff88; font-weight: bold;">{{ music.total_score }}점</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4" style="padding: 30px;">아직 집계된 랭킹이 없습니다. 게임을 플레이해보세요!</td>
-            </tr>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
 
-    <div class="bottom-btn-area">
-        <a href="{% url 'twobeats_worldcup:play' %}" class="btn-home">🎮 월드컵 하러 가기</a>
+        <table class="rank-table">
+            <thead>
+                <tr>
+                    <th width="80">순위</th>
+                    <th>곡 정보</th>
+                    <th width="150">우승 횟수</th>
+                    <th width="150">총점</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for music in rankings|slice:"3:" %}
+                <tr>
+                    <td>{{ forloop.counter|add:3 }}위</td>
+                    <td>
+                        <div class="td-info">
+                            {% if music.music_thumbnail %}
+                                <img src="{{ music.music_thumbnail.url }}" class="mini-thumb">
+                            {% else %}
+                                <div class="mini-thumb">No Img</div>
+                            {% endif %}
+                            
+                            <div>
+                                <div style="font-weight:bold;">{{ music.music_title }}</div>
+                                <div style="color:#888; font-size:0.9rem;">{{ music.music_singer }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ music.win_count }}회</td>
+                    <td style="color: #00ff88; font-weight: bold;">{{ music.total_score }}점</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 30px; text-align: center; color: #666;">
+                        데이터가 없습니다.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="bottom-btn-area">
+            <a href="{% url 'twobeats_worldcup:play' %}" class="btn-home">🎮 월드컵 하러 가기</a>
+        </div>
+
     </div>
-</div>
 
 </body>
 </html>

@@ -93,6 +93,21 @@
             
             <!-- 버튼들 -->
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <!-- 재생 버튼 -->
+                {% if music.music_root %}
+                <button 
+                    class="btn btn-primary"
+                    data-id="{{ music.id }}"
+                    data-title="{{ music.music_title }}"
+                    data-singer="{{ music.music_singer }}"
+                    data-url="{{ music.music_root.url }}"
+                    data-thumb="{% if music.music_thumbnail %}{{ music.music_thumbnail.url }}{% endif %}"
+                    onclick="playMusicFromData(this)"
+                >
+                    ▶️ 재생
+                </button>
+                {% endif %}
+                
                 <!-- 좋아요 버튼 -->
                 {% if user.is_authenticated %}
                     <button 
@@ -118,17 +133,6 @@
         </div>
     </div>
 </div>
-
-<!-- 음악 재생 플레이어 -->
-{% if music.music_root %}
-<div class="card">
-    <h2 style="margin-bottom: 1rem;">🎵 음악 재생</h2>
-    <audio controls style="width: 100%;">
-        <source src="{{ music.music_root.url }}" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-</div>
-{% endif %}
 
 <!-- 댓글 -->
 <div class="card">

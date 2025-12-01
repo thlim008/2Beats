@@ -4,187 +4,295 @@
 
 {% block title %}음악 검색 - TwoBeats{% endblock %}
 
-{% block content %}
-<div class="card">
-    <h1 style="margin-bottom: 1.5rem;">🔍 음악 검색</h1>
+{% block extra_css %}
+<style>
+    .autocomplete-container {
+        position: relative;
+    }
     
-    <!-- 검색 폼 -->
+    .autocomplete-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        display: none;
+        z-index: 100;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .autocomplete-results.active {
+        display: block;
+    }
+    
+    .autocomplete-item {
+        padding: 0.8rem 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+    
+    .autocomplete-item:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .autocomplete-item.selected {
+        background-color: #e8f5e9;
+    }
+    
+    .autocomplete-type {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        color: white;
+    }
+    
+    .type-title {
+        background-color: #1db954;
+    }
+    
+    .type-singer {
+        background-color: #3498db;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem;">🔍 음악 검색</h1>
+
+<!-- 검색 폼 -->
+<div class="card">
     <form method="GET" action="{% url 'music_explore:search' %}">
-        <!-- 제목/가수 검색 -->
-        <div style="margin-bottom: 1rem;">
+        <div class="autocomplete-container">
             <input 
                 type="text" 
                 name="q" 
-                class="search-box" 
-                placeholder="제목, 가수 검색..." 
+                class="search-box"
+                id="search-input"
+                placeholder="제목 또는 가수로 검색..."
                 value="{{ query }}"
+                autocomplete="off"
             >
+            <div class="autocomplete-results" id="autocomplete-results"></div>
         </div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
             <!-- 장르 필터 -->
-            <select name="genre" class="search-box">
+            <select name="genre" class="search-box" style="flex: 1; min-width: 150px;">
                 <option value="">전체 장르</option>
-                <option value="ballad" {% if genre == 'ballad' %}selected{% endif %}>발라드</option>
-                <option value="dance" {% if genre == 'dance' %}selected{% endif %}>댄스</option>
-                <option value="hiphop" {% if genre == 'hiphop' %}selected{% endif %}>힙합</option>
+                <option value="pop" {% if genre == 'pop' %}selected{% endif %}>Pop</option>
+                <option value="ballad" {% if genre == 'ballad' %}selected{% endif %}>Ballad</option>
+                <option value="hiphop" {% if genre == 'hiphop' %}selected{% endif %}>Hip-Hop</option>
                 <option value="rnb" {% if genre == 'rnb' %}selected{% endif %}>R&B</option>
-                <option value="rock" {% if genre == 'rock' %}selected{% endif %}>록</option>
-                <option value="pop" {% if genre == 'pop' %}selected{% endif %}>팝</option>
-                <option value="indie" {% if genre == 'indie' %}selected{% endif %}>인디</option>
-                <option value="trot" {% if genre == 'trot' %}selected{% endif %}>트로트</option>
-                <option value="jazz" {% if genre == 'jazz' %}selected{% endif %}>재즈</option>
-                <option value="ost" {% if genre == 'ost' %}selected{% endif %}>OST</option>
-                <option value="etc" {% if genre == 'etc' %}selected{% endif %}>기타</option>
+                <option value="rock" {% if genre == 'rock' %}selected{% endif %}>Rock</option>
+                <option value="dance" {% if genre == 'dance' %}selected{% endif %}>Dance</option>
+                <option value="indie" {% if genre == 'indie' %}selected{% endif %}>Indie</option>
             </select>
             
             <!-- 태그 필터 -->
-            <select name="tag" class="search-box">
+            <select name="tag" class="search-box" style="flex: 1; min-width: 150px;">
                 <option value="">전체 태그</option>
                 {% for t in all_tags %}
-                    <option value="{{ t.name }}" {% if tag == t.name %}selected{% endif %}>
-                        #{{ t.name }}
-                    </option>
+                    <option value="{{ t.name }}" {% if tag == t.name %}selected{% endif %}>#{{ t.name }}</option>
                 {% endfor %}
             </select>
+            
+            <button type="submit" class="btn btn-primary">검색</button>
         </div>
-        
-        <button type="submit" class="btn btn-primary">검색</button>
     </form>
 </div>
 
 <!-- 검색 결과 -->
 <div class="card">
     <h2 style="margin-bottom: 1rem;">
-        {% if query or genre or tag %}
-            검색 결과 ({{ musics.paginator.count }}곡)
-            {% if query %}<span style="color: #1db954;"> - "{{ query }}"</span>{% endif %}
-            {% if genre %}<span style="color: #1db954;"> - 장르: {{ genre }}</span>{% endif %}
-            {% if tag %}<span style="color: #1db954;"> - 태그: #{{ tag }}</span>{% endif %}
-        {% else %}
-            전체 음악 ({{ musics.paginator.count }}곡)
-        {% endif %}
+        검색 결과 
+        <span style="color: #666; font-size: 1rem;">({{ musics.paginator.count }}곡)</span>
     </h2>
     
     {% if musics %}
         <div style="display: grid; gap: 1rem;">
             {% for music in musics %}
                 <div style="
-                    padding: 1rem; 
-                    border: 1px solid #eee; 
-                    border-radius: 8px;
                     display: flex;
-                    gap: 1rem;
                     align-items: center;
-                    transition: all 0.3s;
-                " onmouseover="this.style.backgroundColor='#f9f9f9'" 
-                   onmouseout="this.style.backgroundColor='white'">
-                    
+                    padding: 1rem;
+                    background-color: #f9f9f9;
+                    border-radius: 8px;
+                    gap: 1rem;
+                ">
                     <!-- 썸네일 -->
-                    <div style="min-width: 80px; max-width: 80px;">
+                    <div style="min-width: 60px;">
                         {% if music.music_thumbnail %}
                             <img src="{{ music.music_thumbnail.url }}" 
-                                 alt="{{ music.music_title }}"
-                                 style="
-                                     width: 80px; 
-                                     height: 80px; 
-                                     object-fit: cover; 
-                                     border-radius: 8px;
-                                 ">
+                                 style="width: 60px; height: 60px; border-radius: 4px; object-fit: cover;">
                         {% else %}
                             <div style="
-                                width: 80px; 
-                                height: 80px; 
+                                width: 60px; 
+                                height: 60px; 
                                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                border-radius: 8px;
+                                border-radius: 4px;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
-                                font-size: 2rem;
-                            ">
-                                🎵
-                            </div>
+                                font-size: 1.5rem;
+                            ">🎵</div>
                         {% endif %}
                     </div>
                     
                     <!-- 정보 -->
                     <div style="flex: 1;">
-                        <h3 style="margin-bottom: 0.5rem;">
-                            <a href="{% url 'music_explore:detail' music.id %}" 
-                               style="color: #333; text-decoration: none;">
-                                {{ music.music_title }}
-                            </a>
-                        </h3>
-                        <p style="color: #666; margin-bottom: 0.3rem;">{{ music.music_singer }}</p>
-                        <p style="color: #999; font-size: 0.9rem;">
-                            {{ music.get_music_type_display }} | 
-                            재생 {{ music.music_count }}회 | 
-                            좋아요 {{ music.music_like_count }}
-                            
-                            <!-- 태그 표시 -->
-                            {% if music.tags.all %}
-                                | 
-                                {% for mtag in music.tags.all %}
-                                    <span style="color: #1db954;">#{{ mtag.name }}</span>{% if not forloop.last %}, {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                        </p>
+                        <a href="{% url 'music_explore:detail' music.id %}" 
+                           style="font-weight: bold; color: #333; text-decoration: none;">
+                            {{ music.music_title }}
+                        </a>
+                        <p style="color: #666; font-size: 0.9rem;">{{ music.music_singer }}</p>
                     </div>
                     
                     <!-- 재생 버튼 -->
+                    {% if music.music_root %}
                     <button 
-                        class="btn btn-primary" 
+                        class="btn btn-primary"
                         data-id="{{ music.id }}"
                         data-title="{{ music.music_title }}"
                         data-singer="{{ music.music_singer }}"
-                        data-url="{% if music.music_root %}{{ music.music_root.url }}{% endif %}"
+                        data-url="{{ music.music_root.url }}"
                         data-thumb="{% if music.music_thumbnail %}{{ music.music_thumbnail.url }}{% endif %}"
                         onclick="playMusicFromData(this)"
                     >
-                        재생 ▶
+                        ▶️
                     </button>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
         
         <!-- 페이지네이션 -->
         {% if musics.has_other_pages %}
-            <div style="
-                display: flex; 
-                justify-content: center; 
-                gap: 0.5rem; 
-                margin-top: 2rem;
-                flex-wrap: wrap;
-            ">
-                {% if musics.has_previous %}
-                    <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if genre %}&genre={{ genre }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" 
-                       class="btn btn-secondary">« 처음</a>
-                    <a href="?page={{ musics.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if genre %}&genre={{ genre }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" 
-                       class="btn btn-secondary">‹ 이전</a>
-                {% endif %}
-                
-                <span style="
-                    padding: 0.5rem 1rem; 
-                    background: #1db954; 
-                    color: white; 
-                    border-radius: 4px;
-                ">
-                    {{ musics.number }} / {{ musics.paginator.num_pages }}
-                </span>
-                
-                {% if musics.has_next %}
-                    <a href="?page={{ musics.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if genre %}&genre={{ genre }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" 
-                       class="btn btn-secondary">다음 ›</a>
-                    <a href="?page={{ musics.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if genre %}&genre={{ genre }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" 
-                       class="btn btn-secondary">마지막 »</a>
-                {% endif %}
-            </div>
+        <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;">
+            {% if musics.has_previous %}
+                <a href="?q={{ query }}&genre={{ genre }}&tag={{ tag }}&page=1" class="btn btn-secondary">처음</a>
+                <a href="?q={{ query }}&genre={{ genre }}&tag={{ tag }}&page={{ musics.previous_page_number }}" class="btn btn-secondary">이전</a>
+            {% endif %}
+            
+            <span class="btn btn-primary">{{ musics.number }} / {{ musics.paginator.num_pages }}</span>
+            
+            {% if musics.has_next %}
+                <a href="?q={{ query }}&genre={{ genre }}&tag={{ tag }}&page={{ musics.next_page_number }}" class="btn btn-secondary">다음</a>
+                <a href="?q={{ query }}&genre={{ genre }}&tag={{ tag }}&page={{ musics.paginator.num_pages }}" class="btn btn-secondary">마지막</a>
+            {% endif %}
+        </div>
         {% endif %}
-        
     {% else %}
         <p style="text-align: center; color: #999; padding: 2rem;">
             검색 결과가 없습니다.
         </p>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const searchInput = document.getElementById('search-input');
+const autocompleteResults = document.getElementById('autocomplete-results');
+let selectedIndex = -1;
+let debounceTimer;
+
+// 입력 시 자동완성
+searchInput.addEventListener('input', function() {
+    clearTimeout(debounceTimer);
+    const query = this.value.trim();
+    
+    if (query.length < 1) {
+        autocompleteResults.classList.remove('active');
+        return;
+    }
+    
+    // 300ms 후에 검색 (타이핑 중에는 요청 안 함)
+    debounceTimer = setTimeout(() => {
+        fetch(`/music/autocomplete/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results.length > 0) {
+                    renderAutocomplete(data.results);
+                } else {
+                    autocompleteResults.classList.remove('active');
+                }
+            });
+    }, 300);
+});
+
+// 자동완성 렌더링
+function renderAutocomplete(results) {
+    selectedIndex = -1;
+    autocompleteResults.innerHTML = results.map((item, index) => `
+        <div class="autocomplete-item" data-value="${item.value}" data-index="${index}">
+            <span class="autocomplete-type ${item.type === 'title' ? 'type-title' : 'type-singer'}">
+                ${item.type === 'title' ? '제목' : '가수'}
+            </span>
+            <span>${item.value}</span>
+        </div>
+    `).join('');
+    
+    autocompleteResults.classList.add('active');
+    
+    // 클릭 이벤트
+    document.querySelectorAll('.autocomplete-item').forEach(item => {
+        item.addEventListener('click', function() {
+            searchInput.value = this.dataset.value;
+            autocompleteResults.classList.remove('active');
+            searchInput.closest('form').submit();
+        });
+    });
+}
+
+// 키보드 네비게이션
+searchInput.addEventListener('keydown', function(e) {
+    const items = document.querySelectorAll('.autocomplete-item');
+    
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+        updateSelected(items);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        updateSelected(items);
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+        e.preventDefault();
+        searchInput.value = items[selectedIndex].dataset.value;
+        autocompleteResults.classList.remove('active');
+        searchInput.closest('form').submit();
+    } else if (e.key === 'Escape') {
+        autocompleteResults.classList.remove('active');
+    }
+});
+
+function updateSelected(items) {
+    items.forEach((item, index) => {
+        if (index === selectedIndex) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+// 외부 클릭 시 닫기
+document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !autocompleteResults.contains(e.target)) {
+        autocompleteResults.classList.remove('active');
+    }
+});
+</script>
 {% endblock %}

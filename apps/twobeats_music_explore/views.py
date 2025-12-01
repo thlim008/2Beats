@@ -208,3 +208,28 @@ def get_music_like_status(request, music_id):
         'is_liked': is_liked,
         'like_count': music.music_like_count
     })
+
+def search_autocomplete(request):
+    """검색 자동완성 API"""
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 1:
+        return JsonResponse({'results': []})
+    
+    # 제목 검색
+    titles = Music.objects.filter(
+        music_title__icontains=query
+    ).values_list('music_title', flat=True)[:5]
+    
+    # 가수 검색
+    singers = Music.objects.filter(
+        music_singer__icontains=query
+    ).values_list('music_singer', flat=True).distinct()[:5]
+    
+    results = []
+    for title in titles:
+        results.append({'type': 'title', 'value': title})
+    for singer in singers:
+        results.append({'type': 'singer', 'value': singer})
+    
+    return JsonResponse({'results': results[:8]})

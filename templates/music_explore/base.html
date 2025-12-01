@@ -345,8 +345,9 @@
             cursor: pointer;
         }
         
-        {% block extra_css %}{% endblock %}
+        
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- 로딩 오버레이 -->
@@ -422,6 +423,41 @@
     <script>
         // ===== 유틸리티 함수 =====
         
+        // 키보드 단축키
+        document.addEventListener('keydown', function(e) {
+            // 입력 중이면 무시 (검색창, 댓글 등)
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+    
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+            case 'ArrowLeft':
+                if (audio.src) {
+                    audio.currentTime -= 5;  // 5초 뒤로
+                }
+                break;
+            case 'ArrowRight':
+                if (audio.src) {
+                    audio.currentTime += 5;  // 5초 앞으로
+                }
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                changeVolume(Math.min(100, audio.volume * 100 + 10));
+                document.getElementById('volume-slider').value = audio.volume * 100;
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                changeVolume(Math.max(0, audio.volume * 100 - 10));
+                document.getElementById('volume-slider').value = audio.volume * 100;
+                break;
+            }
+        });
+
         function showLoading() {
             document.getElementById('loading-overlay').classList.add('active');
         }

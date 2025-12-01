@@ -6,6 +6,9 @@ app_name = 'music_explore'
 urlpatterns = [
     # 검색
     path('search/', views.search_music, name='search'),
+
+    # 검색 자동 완성
+    path('autocomplete/', views.search_autocomplete, name='autocomplete'),
     
     # 통합 차트
     path('chart/', views.chart_all, name='chart_all'),

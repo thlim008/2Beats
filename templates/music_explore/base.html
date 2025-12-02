@@ -742,6 +742,11 @@
         
         function playMusicFromData(btn) {
             // 같은 곡 클릭 시 일시정지/재생 토글
+            const id = parseInt(btn.dataset.id);
+            const title = btn.dataset.title;
+            const singer = btn.dataset.singer;
+            const url = btn.dataset.url;
+            const thumb = btn.dataset.thumb || null;
             if (currentMusicData && currentMusicData.id === id) {
                 togglePlay();
                 // 버튼 아이콘 변경
@@ -1067,6 +1072,25 @@
                 if (btn) btn.textContent = '▶';
             }
         });
+        
+        // 마우스 휠로 볼륨 조절
+        document.getElementById('volume-slider').addEventListener('wheel', function(e) {
+            e.preventDefault();
+
+            let currentVolume = parseInt(this.value);
+
+            if (e.deltaY < 0) {
+                // 휠 위로 → 볼륨 업
+                currentVolume = Math.min(100, currentVolume + 5);
+            } else {
+                // 휠 아래로 → 볼륨 다운
+                currentVolume = Math.max(0, currentVolume - 5);
+            }
+
+            this.value = currentVolume;
+            changeVolume(currentVolume);
+        });
+
     </script>
 
     {% block extra_js %}{% endblock %}

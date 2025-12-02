@@ -10,4 +10,5 @@ urlpatterns = [
     path('ranking/', views.ranking_page, name='ranking'),
     path('chart/', views.wc_popular, name='chart'),
     path('result/<int:game_id>/', views.result_page, name='result'),
+    path('save_playlist/<int:game_id>/', views.save_result_to_playlist, name='save_playlist'),
 ]

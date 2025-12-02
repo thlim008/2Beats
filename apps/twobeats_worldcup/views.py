@@ -3,7 +3,7 @@ import random
 from django.db.models import Sum, Count, Q
 from django.db.models.functions import Coalesce
 from rest_framework.decorators import api_view
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,9 +11,11 @@ from django.db import transaction
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from apps.twobeats_upload.models import Music
 from apps.twobeats_music_explore.models import MusicLike
+from apps.twobeats_account.models import Playlist, PlaylistMusic
 from .models import WorldCupGame, WorldCupResult
 from .serializers import CandidateSerializer, WorldCupSaveSerializer
 
@@ -243,6 +245,52 @@ def result_page(request, game_id):
         'recommendations': recommendations, # 템플릿으로 전달
     }
     return render(request, 'twobeats_worldcup/result.html', context)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated]) # 로그인한 유저만 가능
+def save_result_to_playlist(request, game_id):
+    """
+    월드컵 결과(4강 이상)를 새 플레이리스트로 저장
+    """
+    try:
+        game = get_object_or_404(WorldCupGame, pk=game_id)
+        
+        # 1. 저장할 대상 곡 가져오기 (예: 4강 이상인 rank 1, 2, 4)
+        # 16강 전체를 저장하고 싶다면 rank 필터링을 제거하면 됩니다.
+        top_results = WorldCupResult.objects.filter(
+            wc_game=game, 
+            wc_final_rank__lte=4  # 4위(4강) 이내만 저장
+        ).order_by('wc_final_rank')
+        
+        if not top_results.exists():
+            return Response({'error': '저장할 곡이 없습니다.'}, status=400)
+
+        # 2. 새 플레이리스트 생성
+        # 이름 예시: "월드컵 우승곡 모음 (2025-11-27)"
+        playlist_title = f"월드컵 결과 ({timezone.now().strftime('%Y-%m-%d')})"
+        new_playlist = Playlist.objects.create(
+            user=request.user,
+            folder_name=playlist_title
+        )
+
+        # 3. 곡들을 플레이리스트에 추가 (Bulk Create로 한 번에 저장)
+        playlist_musics = []
+        for index, result in enumerate(top_results):
+            playlist_musics.append(PlaylistMusic(
+                playlist=new_playlist,
+                music=result.wc_music,
+                order=index # 순서대로 저장
+            ))
+        
+        PlaylistMusic.objects.bulk_create(playlist_musics)
+
+        return Response({
+            'message': f'"{playlist_title}"에 {len(playlist_musics)}곡이 저장되었습니다!',
+            'playlist_id': new_playlist.id
+        }, status=200)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 
 def recommend_by_tags(request, game_id):

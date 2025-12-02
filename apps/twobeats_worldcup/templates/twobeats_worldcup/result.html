@@ -125,14 +125,39 @@
         .btn-retry:hover { background-color: #00cc6a; }
         .btn-ranking { background-color: #333; color: white; border: 1px solid #555; }
         .btn-ranking:hover { background-color: #444; border-color: #777; }
+        .btn-share {
+            background-color: #ff007f; /* 핫핑크 (인스타 느낌) */
+            color: white;
+        }
+        .btn-share:hover { background-color: #e60073; }
 
         @keyframes popUp {
             from { transform: scale(0.8); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
     </style>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"> /* sns 공유 라이브러리 */ </script> 
 </head>
 <body>
+
+<div id="share-card-area" style="position: absolute; top: -9999px; left: -9999px; width: 600px; height: 900px; background: linear-gradient(135deg, #1a1a1a, #2a2a2a); padding: 40px; text-align: center; border-radius: 20px; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <div style="font-size: 2rem; color: #00ff88; font-weight: bold; margin-bottom: 30px; text-shadow: 0 0 10px rgba(0,255,136,0.5);">
+        🎵 2Beats World Cup
+    </div>
+
+    <div style="position: relative; width: 400px; height: 400px; margin-bottom: 30px;">
+        <div style="position: absolute; top: -20px; left: -20px; font-size: 4rem;">👑</div>
+        <img id="share-img" src="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; border: 5px solid #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);">
+    </div>
+
+    <h2 id="share-title" style="font-size: 2.5rem; margin: 10px 0; word-break: keep-all;">Title</h2>
+    <p id="share-singer" style="font-size: 1.5rem; color: #aaa; margin: 0;">Singer</p>
+
+    <div style="margin-top: 50px; padding: 15px 30px; background: #333; border-radius: 50px; font-size: 1.2rem; color: #00ff88; border: 2px solid #00ff88;">
+        내 취향의 음악을 찾아보세요!
+    </div>
+</div>
 
 <div class="container">
     
@@ -207,6 +232,8 @@
 
     <div class="btn-group">
         <button class="btn-retry" onclick="location.href='{% url 'twobeats_worldcup:play' %}'">🔄 다시 하기</button>
+
+        <button class="btn-share" onclick="downloadShareImage()">📸 이미지 저장</button>
         
         {% if user.is_authenticated %}
             <button class="btn-save" onclick="saveToPlaylist()">💾 결과 저장</button>
@@ -267,6 +294,54 @@
             console.error(error);
             alert("서버 통신 중 오류가 발생했습니다.");
         }
+    }
+    // [추가] SNS 공유 이미지 다운로드 함수
+    function downloadShareImage() {
+        // 1. 현재 우승자 정보를 캡처용 카드에 세팅
+        const originalImg = document.getElementById('winner-img-source'); // 아래 설명 참조 (ID 추가 필요)
+        const shareImg = document.getElementById('share-img');
+        const shareTitle = document.getElementById('share-title');
+        const shareSinger = document.getElementById('share-singer');
+
+        // result.html에서 우승자 정보 가져오기 (DOM id 확인 필요)
+        // 현재 result.html 코드를 보면 class로 되어 있거나 id가 없을 수 있음
+        // 따라서 확실하게 값을 가져오도록 수정해야 함.
+        
+        // 2. 값 복사
+        // 템플릿 변수를 JS 문자열로 바로 넣는 방식 사용
+        shareImg.src = "{{ winner.wc_music.music_thumbnail.url }}"; 
+        shareTitle.innerText = "{{ winner.wc_music.music_title }}";
+        shareSinger.innerText = "{{ winner.wc_music.music_singer }}";
+
+        // 3. html2canvas로 캡처 시작
+        const captureArea = document.getElementById('share-card-area');
+        
+        // 잠깐 보이게 위치 이동 (화면 밖이지만 렌더링은 되게)
+        // html2canvas는 display:none 요소를 캡처 못함
+        captureArea.style.top = "0";
+        captureArea.style.zIndex = "-1"; // 유저 눈에는 안 보이게 뒤로
+
+        html2canvas(captureArea, {
+            useCORS: true, // 외부 이미지(S3 등) 사용 시 필수
+            scale: 2,      // 고해상도 (레티나 디스플레이 대응)
+            backgroundColor: null // 배경 투명 방지
+        }).then(canvas => {
+            // 4. 다운로드 트리거
+            const link = document.createElement('a');
+            link.download = '2Beats_Winner.png';
+            link.href = canvas.toDataURL("image/png");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // 5. 다시 숨기기
+            captureArea.style.top = "-9999px";
+            alert("이미지가 저장되었습니다! SNS에 공유해보세요 📸");
+        }).catch(err => {
+            console.error(err);
+            alert("이미지 생성 실패 (브라우저 보안 설정 등을 확인하세요)");
+            captureArea.style.top = "-9999px";
+        });
     }
 </script>
 

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>나만의 월드컵 만들기</title>
+    <style>
+        body { background-color: #121212; color: white; font-family: sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 20px; background: #333; border: 1px solid #555; color: white; }
+        
+        .music-list { height: 400px; overflow-y: scroll; border: 1px solid #333; padding: 10px; }
+        .music-item { display: flex; align-items: center; padding: 5px; border-bottom: 1px solid #222; }
+        .music-item:hover { background: #1e1e1e; }
+        .thumb { width: 40px; height: 40px; margin-right: 10px; object-fit: cover; border-radius: 4px; }
+        
+        .btn-create { width: 100%; padding: 15px; background: #00ff88; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1.1rem; }
+        .btn-create:hover { background: #00cc6a; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🛠️ 나만의 월드컵 만들기</h1>
+    
+    <label>월드컵 제목</label>
+    <input type="text" id="wc-title" placeholder="예: 아이유 발라드 모음 (최소 4곡 이상 선택)">
+
+    <label>후보곡 선택 (체크박스)</label>
+    <div class="music-list">
+        {% for music in musics %}
+        <div class="music-item">
+            <input type="checkbox" class="music-checkbox" value="{{ music.id }}" style="margin-right: 15px;">
+            
+            {% if music.music_thumbnail %}
+                <img src="{{ music.music_thumbnail.url }}" class="thumb">
+            {% else %}
+                <div class="thumb" style="background:#333;"></div>
+            {% endif %}
+            
+            <div>
+                <div>{{ music.music_title }}</div>
+                <div style="font-size:0.8rem; color:#888;">{{ music.music_singer }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button class="btn-create" onclick="submitWorldCup()">월드컵 생성하기</button>
+</div>
+
+<script>
+    async function submitWorldCup() {
+        const title = document.getElementById('wc-title').value;
+        
+        // 체크된 박스들의 값을 배열로 가져오기
+        const checkboxes = document.querySelectorAll('.music-checkbox:checked');
+        const musicIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        if (!title.trim()) return alert("제목을 입력해주세요.");
+        if (musicIds.length < 4) return alert("최소 4곡 이상 선택해야 합니다.");
+
+        try {
+            // CSRF 토큰 (Django 기본)
+            const getCookie = (name) => {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrftoken = getCookie('csrftoken');
+
+            // API 호출 (POST)
+            const response = await fetch('/worldcup/api/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    title: title,
+                    music_ids: musicIds
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("생성 완료! 공유 URL이 클립보드에 복사되었습니다.\n(확인 클릭 시 해당 게임으로 이동)");
+                // 클립보드 복사 (선택사항)
+                navigator.clipboard.writeText(window.location.origin + data.share_url);
+                // 게임 페이지로 이동 (URL에 생성된 코드가 있다고 가정)
+                window.location.href = data.share_url;
+            } else {
+                alert("오류: " + (data.error || JSON.stringify(data)));
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert("서버 통신 오류");
+        }
+    }
+</script>
+
+</body>
+</html>

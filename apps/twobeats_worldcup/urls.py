@@ -11,4 +11,7 @@ urlpatterns = [
     path('chart/', views.wc_popular, name='chart'),
     path('result/<int:game_id>/', views.result_page, name='result'),
     path('save_playlist/<int:game_id>/', views.save_result_to_playlist, name='save_playlist'),
+    path('create/', views.custom_worldcup_page, name='create_page'),
+    path('api/create/', views.create_custom_worldcup, name='create_api'),
+    path('custom/<uuid:access_code>/', views.custom_game_page, name='play_custom'),
 ]

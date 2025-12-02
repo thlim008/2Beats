@@ -16,7 +16,7 @@ from django.utils import timezone
 from apps.twobeats_upload.models import Music
 from apps.twobeats_music_explore.models import MusicLike
 from apps.twobeats_account.models import Playlist, PlaylistMusic
-from .models import WorldCupGame, WorldCupResult
+from .models import WorldCupGame, WorldCupResult, CustomWorldCup
 from .serializers import CandidateSerializer, WorldCupSaveSerializer
 
 User = get_user_model()
@@ -35,9 +35,16 @@ def get_candidates(request):
     genre = request.query_params.get('genre', 'all')
     count = int(request.query_params.get('count', 16))
     sort_mode = request.query_params.get('sort', 'random')
+    custom_code = request.query_params.get('custom_code')
 
     # 기본 쿼리셋
-    base_musics = Music.objects.all()
+    if custom_code:
+        # 커스텀 월드컵인 경우 해당 곡들만 후보로 설정
+        custom_wc = get_object_or_404(CustomWorldCup, access_code=custom_code)
+        base_musics = custom_wc.musics.all()
+    else:
+        # 일반 모드
+        base_musics = Music.objects.all()
 
     # ---------------------------------------------------------
     # CASE A: 랭킹 모드 (인기곡 대결)
@@ -127,12 +134,20 @@ def save_game_result(request):
             user = None
             if data.get('user_uid'):
                 user = User.objects.filter(pk=data['user_uid']).first()
+            # 1. 커스텀 월드컵인지 확인 (custom_code 받기)
+            # (request.data에서 직접 가져옵니다)
+            custom_code = request.data.get('custom_code')
+            custom_wc = None
+            if custom_code:
+                # access_code로 해당 커스텀 월드컵 찾기
+                custom_wc = CustomWorldCup.objects.filter(access_code=custom_code).first()
 
-            # 게임 헤더 저장
+            # 2. 게임 헤더 저장 (custom_worldcup 필드 추가)
             game = WorldCupGame.objects.create(
                 wc_user=user,
-                wc_total_rounds=data['total_rounds']
-            )
+                wc_total_rounds=data['total_rounds'],
+                custom_worldcup=custom_wc  # ✅ 새로 추가된 부분
+            ) 
 
             # 상세 결과 저장
             score_map = {1: 50, 2: 30, 4: 10, 8: 5, 16: 0}
@@ -157,9 +172,48 @@ def save_game_result(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_custom_worldcup(request):
+    """나만의 월드컵 생성"""
+    title = request.data.get('title')
+    music_ids = request.data.get('music_ids', []) # 선택한 노래 ID 리스트 [1, 5, 10...]
+
+    if not title or len(music_ids) < 4:
+        return Response({'error': '제목과 최소 4곡 이상의 노래가 필요합니다.'}, status=400)
+
+    # 1. 커스텀 월드컵 객체 생성
+    custom_wc = CustomWorldCup.objects.create(
+        title=title,
+        creator=request.user
+    )
+    
+    # 2. 노래 연결
+    musics = Music.objects.filter(id__in=music_ids)
+    custom_wc.musics.set(musics)
+    
+    # 3. 공유 URL 반환
+    share_url = f"/worldcup/custom/{custom_wc.access_code}/"
+    return Response({'message': '생성 완료!', 'share_url': share_url})
+
+def custom_worldcup_page(request):
+    """나만의 월드컵 생성 화면 렌더링"""
+    # 사용자가 선택할 수 있게 모든 노래 목록을 함께 보냄
+    musics = Music.objects.all().order_by('music_title')
+    return render(request, 'twobeats_worldcup/create.html', {'musics': musics})
+    
 def game_page(request):
     """월드컵 게임 화면 렌더링"""
     return render(request, 'twobeats_worldcup/game.html')
+
+def custom_game_page(request, access_code):
+    """커스텀 월드컵 플레이 페이지"""
+    custom_wc = get_object_or_404(CustomWorldCup, access_code=access_code)
+    context = {
+        'is_custom': True,
+        'custom_wc': custom_wc, # 템플릿에서 제목 등을 보여주기 위함
+    }
+    return render(request, 'twobeats_worldcup/game.html', context)
     
 def ranking_page(request):
     """

@@ -1,7 +1,29 @@
 # twobeats_worldcup/models.py
-
+import uuid
 from django.db import models
 from django.conf import settings
+
+class CustomWorldCup(models.Model):
+    title = models.CharField(max_length=100, verbose_name="월드컵 제목")
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="생성자"
+    )
+    # 공유용 고유 주소 (예: /worldcup/custom/550e8400-e29b...)
+    access_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    # 이 월드컵에 포함될 후보곡들
+    musics = models.ManyToManyField(
+        'twobeats_upload.Music',
+        related_name='included_custom_wcs',
+        verbose_name="후보곡 목록"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
 
 class WorldCupGame(models.Model):
     """
@@ -37,6 +59,14 @@ class WorldCupGame(models.Model):
         db_column='wc_created_at'
     )
 
+    custom_worldcup = models.ForeignKey(
+        CustomWorldCup,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='played_games'
+    )
+
     class Meta:
         db_table = 'world_cup_game'
         verbose_name = '월드컵 게임'
@@ -46,7 +76,6 @@ class WorldCupGame(models.Model):
     def __str__(self):
         user_name = self.wc_user.username if self.wc_user else "Guest"
         return f"[{self.wc_game_serial_key}] {user_name}의 게임"
-
 
 class WorldCupResult(models.Model):
     """

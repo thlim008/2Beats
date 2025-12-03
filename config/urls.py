@@ -18,10 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from apps.twobeats_account import views as account_views
 
 urlpatterns = [
+    path('', account_views.landing, name='landing'),
     path('admin/', admin.site.urls),
     path('video/', include('apps.twobeats_video_explore.urls')),
+    path('account/', include('apps.twobeats_account.urls')),
 ]
 
 if settings.DEBUG:

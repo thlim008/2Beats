@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>홈 | 2beats</title>
+  <style>
+    :root {
+      --bg: #0a0f1a;
+      --card: #0c1424;
+      --accent: #22d3ee;
+      --accent-2: #a855f7;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --border: #1e293b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system, sans-serif;
+      background: linear-gradient(145deg, rgba(34,211,238,0.08), rgba(168,85,247,0.08), var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      position: relative;
+    }
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      backdrop-filter: blur(12px);
+      background: rgba(12, 20, 36, 0.85);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 10;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-actions a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .wrap {
+      width: min(960px, 100%);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+    .card h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: -0.01em; }
+    .card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      color: #0b1220;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 30px rgba(34,211,238,0.25);
+    }
+    .btn.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+    .header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .hello { font-size: 20px; margin: 0; }
+    .links { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(34,211,238,0.12);
+      color: var(--text);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% url 'home' %}">2beats</a>
+    <div class="nav-actions">
+      <a href="{% url 'home' %}">홈으로</a>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <p class="pill">로그인 완료</p>
+        <h1 class="hello">안녕하세요, {{ request.user.username }}님</h1>
+        <p style="margin:6px 0 0; color: var(--muted); font-size:14px;">음악과 영상을 관리하고, 프로필을 업데이트하세요.</p>
+      </div>
+      <div class="links">
+        <a class="btn secondary" href="{% url 'profile' %}">마이페이지</a>
+        <a class="btn secondary" href="{% url 'logout' %}">로그아웃</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>업로드</h2>
+      <p>음악/영상 파일을 올리고 태그·썸네일로 브랜드 자산처럼 정리하세요.</p>
+      <div class="actions">
+        <a class="btn" href="#">음악 업로드</a>
+        <a class="btn secondary" href="#">영상 업로드</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>플레이리스트</h2>
+      <p>음악과 영상을 탭으로 나눠 큐레이션하고, 원하는 순서로 재생 경험을 설계하세요.</p>
+      <div class="actions">
+        <a class="btn" href="{% url 'mylist' %}">플레이리스트 관리</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>히스토리</h2>
+      <p>최근 재생 로그를 확인하고 팬 경험을 이어 듣기/보기로 연결하세요.</p>
+      <div class="actions">
+        <a class="btn secondary" href="{% url 'history' %}">히스토리 보기</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

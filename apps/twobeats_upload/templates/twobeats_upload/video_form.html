@@ -1,19 +1,167 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>{% if video %}영상 수정{% else %}새 영상 업로드{% endif %}</h1>
+<div class="tb-upload-page">
 
-  {% if form.errors %}
-    <div style="color: red;">
-      {{ form.errors }}
-    </div>
-  {% endif %}
+  <div class="tb-upload-header">
+    <h1 class="tb-page-title">Video info</h1>
+    <p class="tb-page-subtitle">
+      영상을 소개할 정보를 입력하고 썸네일을 추가해 주세요.
+    </p>
+  </div>
 
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" class="tb-upload-form">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">저장</button>
-  </form>
 
-  <a href="{% url 'twobeats_upload:video_list' %}">영상 리스트</a>
+    {% if form.non_field_errors %}
+      <div class="tb-form-errors">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="tb-upload-layout">
+
+      <!-- 왼쪽: 썸네일 -->
+      <section class="tb-upload-left">
+        <div class="tb-artwork-card"
+            tabindex="-1"
+            onclick="document.getElementById('id_video_thumbnail').click()">
+
+          {# 🔥 항상 같은 구조: img + placeholder #}
+          <img
+            id="tb-video-artwork-preview"
+            class="tb-artwork-preview"
+            alt="Thumbnail"
+            src="{% if video and video.video_thumbnail %}{{ video.video_thumbnail.url }}{% endif %}"
+            {% if not video or not video.video_thumbnail %}style="display:none;"{% endif %}
+          >
+
+          <div id="tb-video-artwork-placeholder"
+              class="tb-artwork-placeholder"
+              {% if video and video.video_thumbnail %}style="display:none;"{% endif %}>
+            <div class="tb-artwork-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24"
+                  fill="none" stroke="#94a3b8" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <path d="M21 15l-5-5L5 21"></path>
+              </svg>
+            </div>
+            <span class="tb-artwork-text">Add new artwork</span>
+          </div>
+        </div>
+
+        {{ form.video_thumbnail }}
+
+        {% if form.video_thumbnail.errors %}
+          <div class="tb-field-error">
+            {{ form.video_thumbnail.errors }}
+          </div>
+        {% endif %}
+      </section>
+
+
+      <!-- 오른쪽: 필드 -->
+      <section class="tb-upload-right">
+
+        <div class="tb-field-row">
+          <label class="tb-label">Title</label>
+          <div class="tb-field-main">
+            {{ form.video_title }}
+          </div>
+        </div>
+
+        <div class="tb-field-row">
+          <label class="tb-label">Artist</label>
+          <div class="tb-field-main">
+            {{ form.video_singer }}
+          </div>
+        </div>
+
+        <div class="tb-field-row">
+          <label class="tb-label">Type</label>
+          <div class="tb-field-main">
+            {{ form.video_type }}
+          </div>
+        </div>
+
+        <div class="tb-field-row">
+          <label class="tb-label">Tags</label>
+          <div class="tb-field-main tb-tags-field">
+            {{ form.tags }}
+            <p class="tb-help-text">
+              영상 분위기, 장르 등에 맞는 태그를 선택해 주세요.
+            </p>
+          </div>
+        </div>
+
+        <div class="tb-field-row">
+          <label class="tb-label">Description</label>
+          <div class="tb-field-main">
+            {{ form.video_detail }}
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+    <div class="tb-upload-footer">
+      <a href="{% url 'twobeats_upload:video_list' %}" class="tb-upload-cancel">
+        취소
+      </a>
+      <button type="submit" class="tb-upload-submit">
+        저장 후 완료
+      </button>
+    </div>
+  </form>
+</div>
+<script>
+  (function () {
+    const input = document.getElementById('id_video_thumbnail');
+    const img = document.getElementById('tb-video-artwork-preview');
+    const placeholder = document.getElementById('tb-video-artwork-placeholder');
+
+    if (!input || !img) return;
+
+    input.addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const url = URL.createObjectURL(file);
+
+        img.src = url;
+        img.style.display = 'block';
+
+        if (placeholder) {
+          placeholder.style.display = 'none';
+        }
+      }
+    });
+  })();
+</script>
+
 {% endblock %}
+
+<script>
+  (function () {
+    const input = document.getElementById('id_video_thumbnail');
+    const img = document.getElementById('tb-video-artwork-preview');
+    const placeholder = document.getElementById('tb-video-artwork-placeholder');
+
+    if (!input || !img) return;
+
+    input.addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const url = URL.createObjectURL(file);
+
+        img.src = url;
+        img.style.display = 'block';
+
+        if (placeholder) {
+          placeholder.style.display = 'none';
+        }
+      }
+    });
+  })();
+</script>

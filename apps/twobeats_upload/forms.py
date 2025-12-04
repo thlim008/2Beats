@@ -16,6 +16,7 @@ class MusicForm(forms.ModelForm):
         ]
         widgets = {
             'tags': forms.CheckboxSelectMultiple,
+            'music_thumbnail': forms.FileInput,
         }
 
 
@@ -29,9 +30,19 @@ class VideoForm(forms.ModelForm):
             'video_root',
             'video_thumbnail',
             'video_detail',
-            'video_time',
             'tags',
         ]
         widgets = {
             'tags': forms.CheckboxSelectMultiple,
+            'video_thumbnail': forms.FileInput,
         }
+
+class MusicFileForm(forms.ModelForm):
+    class Meta:
+        model = Music
+        fields = ['music_root']
+
+class VideoFileForm(forms.ModelForm):
+    class Meta:
+        model = Video
+        fields = ['video_root']

@@ -1,51 +1,72 @@
-{# templates/twobeats_upload/video_detail.html #}
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="tb-detail-layout">
-    <section class="tb-detail-main">
-      <h1>{{ video.video_title }} - {{ video.video_singer }}</h1>
+<div class="tb-page">
+  <div class="tb-page-inner">
 
-      <div class="tb-detail-meta">
-        <span>{{ video.get_video_type_display }}</span>
-        <span>시간: {{ video.video_time }}초</span>
-        <span>조회수: {{ video.video_views }}</span>
-      </div>
-      
-      <div class="tb-detail-tags">
-        <strong>태그:</strong>
-        {% for tag in video.tags.all %}
-          <span>#{{ tag.name }}</span>
-        {% empty %}
-          <span>태그 없음</span>
-        {% endfor %}
-      </div>
+    <header class="tb-video-detail-header">
+      <span class="tb-video-label">VIDEO</span>
+      <h1 class="tb-video-title">{{ video.video_title }}</h1>
+      <p class="tb-video-artist">{{ video.video_singer }}</p>
+    </header>
 
-      {% if video.video_detail %}
-        <h3 style="margin-top:18px;">설명</h3>
-        <p>{{ video.video_detail }}</p>
-      {% endif %}
-    </section>
-
-    <aside>
-      {% if video.video_thumbnail %}
-        <img src="{{ video.video_thumbnail.url }}" alt="thumbnail"
-             style="max-width:100%; border-radius:14px; margin-bottom:12px;">
-      {% endif %}
-
-      {% if video.video_root %}
-        <video controls style="max-width:100%; display:block; border-radius:14px;">
+    <section class="tb-video-detail-main">
+      <!-- 🔥 메인 비디오 플레이어 -->
+      <div class="tb-video-player-card">
+        <video class="tb-video-player" controls>
           <source src="{{ video.video_root.url }}">
           브라우저가 video 태그를 지원하지 않습니다.
         </video>
-      {% endif %}
 
-      <p style="margin-top: 20px; font-size:0.85rem;">
-        <a href="{% url 'twobeats_upload:video_update' video.pk %}">수정</a> |
-        <a href="{% url 'twobeats_upload:video_delete' video.pk %}">삭제</a> |
-        <a href="{% url 'twobeats_upload:video_list' %}">영상 리스트</a> |
-        <a href="{% url 'twobeats_upload:music_list' %}">음악 리스트</a>
-      </p>
-    </aside>
+        <div class="tb-video-stats">
+          <div class="tb-video-meta-line">
+            <span class="tb-video-views">조회수 {{ video.video_views }}</span>
+          </div>
+
+          <div class="tb-video-like-line">
+            <span class="tb-like-ikon">좋아요수 {{ video.video_like_count }}</span>
+            <span class="tb-like-count">{{ video.video_like_count }}</span>
+          </div>
+
+          <div class="tb-video-tags">
+            {% for tag in video.tags.all %}
+              <span class="tb-tag-pill">#{{ tag.name }}</span>
+            {% empty %}
+              <span class="tb-tag-empty">태그 없음</span>
+            {% endfor %}
+          </div>
+        </div>
+
+
+        {% if video.video_detail %}
+          <p class="tb-video-description">
+            {{ video.video_detail }}
+          </p>
+        {% endif %}
+      </div>
+
+      <!-- 🔥 업로더 정보 (썸네일 카드 대신) -->
+      <div class="tb-uploader-inline">
+        <div class="tb-uploader-avatar">
+          {{ video.video_user.username|first|upper }}
+        </div>
+        <div class="tb-uploader-text">
+          <div class="tb-uploader-name">{{ video.video_user.username }}</div>
+          <div class="tb-uploader-caption">Uploader</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="tb-detail-actions">
+      <a href="{% url 'twobeats_upload:video_update' video.pk %}" class="tb-link-ghost">수정</a>
+      <a href="{% url 'twobeats_upload:video_delete' video.pk %}" class="tb-link-ghost"
+      onclick="return confirm('정말 삭제하시겠습니까?');">삭제
+    </a>
+
+    <a href="{% url 'twobeats_upload:video_list' %}" class="tb-link-back">
+        ← My Video Space
+      </a>
+    </footer>
+
   </div>
 {% endblock %}

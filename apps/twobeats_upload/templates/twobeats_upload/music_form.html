@@ -1,14 +1,185 @@
-{# templates/twobeats_upload/music_form.html #}
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>{% if music %}음악 수정{% else %}새 음악 업로드{% endif %}</h1>
+<div class="tb-upload-page">
 
-  <form method="post" enctype="multipart/form-data">
+  <!-- 상단 헤더 -->
+  <div class="tb-upload-header">
+    <h1 class="tb-page-title">Track info</h1>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="tb-upload-form">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">저장</button>
-  </form>
 
-  <a href="{% url 'twobeats_upload:music_list' %}">목록으로</a>
+    {% if form.non_field_errors %}
+      <div class="tb-form-errors">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <!-- 🔥 왼쪽/오른쪽 2컬럼 레이아웃 -->
+    <div class="tb-upload-layout">
+
+      <!-- 왼쪽: 아트워크 -->
+      <section class="tb-upload-left">
+        <div class="tb-artwork-card"
+          tabindex="-1"
+          onclick="document.getElementById('id_music_thumbnail').click()">
+
+      {# 🔥 항상 같은 구조 유지: 위에 img 하나, 밑에 placeholder 하나 #}
+      <img
+        id="tb-artwork-preview"
+        class="tb-artwork-preview"
+        alt="Artwork"
+        src="{% if music and music.music_thumbnail %}{{ music.music_thumbnail.url }}{% endif %}"
+        {% if not music or not music.music_thumbnail %}style="display:none;"{% endif %}
+      >
+
+      <div id="tb-artwork-placeholder"
+          class="tb-artwork-placeholder"
+          {% if music and music.music_thumbnail %}style="display:none;"{% endif %}>
+        <div class="tb-artwork-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24"
+              fill="none" stroke="#94a3b8" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <path d="M21 15l-5-5L5 21"></path>
+          </svg>
+        </div>
+        <span class="tb-artwork-text">Add new artwork</span>
+      </div>
+    </div>
+
+  {# 🔥 실제 파일 input은 숨겨놓고 카드 클릭으로만 사용 #}
+  {{ form.music_thumbnail }}
+
+  {% if form.music_thumbnail.errors %}
+    <div class="tb-field-error">
+      {{ form.music_thumbnail.errors }}
+    </div>
+  {% endif %}
+</section>
+
+
+      <!-- 오른쪽: 입력 필드 전체 -->
+      <section class="tb-upload-right">
+
+        <!-- Track title -->
+        <div class="tb-field-row">
+          <label class="tb-label">Track title</label>
+          <div class="tb-field-main">
+            {{ form.music_title }}
+            {% if form.music_title.errors %}
+              <div class="tb-field-error">
+                {{ form.music_title.errors }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Main artist -->
+        <div class="tb-field-row">
+          <label class="tb-label">Main artist</label>
+          <div class="tb-field-main">
+            {{ form.music_singer }}
+            {% if form.music_singer.errors %}
+              <div class="tb-field-error">
+                {{ form.music_singer.errors }}
+              </div>
+            {% endif %}
+            <p class="tb-help-text">
+              여러 명일 경우 쉼표로 구분해도 좋아요.
+            </p>
+          </div>
+        </div>
+
+        <!-- Genre -->
+        <div class="tb-field-row">
+          <label class="tb-label">Genre</label>
+          <div class="tb-field-main">
+            {{ form.music_type }}
+            {% if form.music_type.errors %}
+              <div class="tb-field-error">
+                {{ form.music_type.errors }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="tb-field-row">
+          <label class="tb-label">Tags</label>
+          <div class="tb-field-main tb-tags-field">
+            {{ form.tags }}
+            {% if form.tags.errors %}
+              <div class="tb-field-error">
+                {{ form.tags.errors }}
+              </div>
+            {% endif %}
+            <p class="tb-help-text">
+              분위기, 템포, 사용처 등에 맞는 태그를 선택해 주세요.
+            </p>
+          </div>
+        </div>
+
+        <!-- Track privacy (UI만) -->
+        <div class="tb-field-row">
+          <label class="tb-label">Track privacy</label>
+          <div class="tb-field-main tb-privacy-row">
+            <label class="tb-radio-pill">
+              <input type="radio" name="privacy" value="public" checked>
+              <span>Public</span>
+            </label>
+            <label class="tb-radio-pill">
+              <input type="radio" name="privacy" value="private">
+              <span>Private</span>
+            </label>
+            <label class="tb-radio-pill">
+              <input type="radio" name="privacy" value="schedule">
+              <span>Schedule</span>
+            </label>
+          </div>
+        </div>
+
+      </section>
+
+    </div>  <!-- /.tb-upload-layout -->
+
+    <!-- 하단 버튼 -->
+    <div class="tb-upload-footer">
+      <a href="{% url 'twobeats_upload:music_list' %}" class="tb-upload-cancel">
+        취소
+      </a>
+      <button type="submit" class="tb-upload-submit">
+        저장 후 완료
+      </button>
+    </div>
+  </form>
+  
+  <script>
+    (function () {
+      const input = document.getElementById('id_music_thumbnail');
+      const img = document.getElementById('tb-artwork-preview');
+      const placeholder = document.getElementById('tb-artwork-placeholder');
+
+      if (!input || !img) return;
+
+      input.addEventListener('change', function () {
+        if (this.files && this.files[0]) {
+          const file = this.files[0];
+          const url = URL.createObjectURL(file);
+
+          img.src = url;
+          img.style.display = 'block';
+
+          if (placeholder) {
+            placeholder.style.display = 'none';
+          }
+        }
+      });
+    })();
+  </script>
+
+</div>
 {% endblock %}

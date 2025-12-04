@@ -1,29 +1,127 @@
-{# templates/twobeats_upload/music_detail.html #}
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>{{ music.music_title }} - {{ music.music_singer }}</h1>
+<div class="tb-track-page">
 
-  <p>장르: {{ music.get_music_type_display }}</p>
-  <p>재생수: {{ music.music_count }}</p>
-  <p>좋아요: {{ music.music_like_count }}</p>
-  <p>태그:
-    {% for tag in music.tags.all %}
-      #{{ tag.name }}
-    {% empty %}
-      태그 없음
-    {% endfor %}
-  </p>
+  <!-- 상단 히어로 영역 -->
+  <div class="tb-track-hero">
+    <!-- 왼쪽: 재생/정보 -->
+    <section class="tb-track-main">
+      <header class="tb-track-header">
+        <div class="tb-track-label">Track</div>
+        <h1 class="tb-track-title">
+          {{ music.music_title }}
+        </h1>
+        <div class="tb-track-artist">
+          {{ music.music_singer }}
+        </div>
+        <div class="tb-music-stats">
+          <span class="tb-music-views">조회수 {{ music.music_count }}</span>
+          <span class="tb-music-likes">좋아요수 {{ music.music_like_count }}</span>
+        </div>
 
-  {% if music.music_thumbnail %}
-    <img src="{{ music.music_thumbnail.url }}" alt="thumbnail" style="max-width:200px;">
-  {% endif %}
+      </header>
 
-  <p>
-    <a href="{{ music.music_root.url }}">음원 파일 다운로드 / 재생</a>
-  </p>
+      <!-- 재생바 -->
+      <div class="tb-track-player">
+        {% if music.music_root %}
+          <audio controls class="tb-audio">
+            <source src="{{ music.music_root.url }}">
+            브라우저가 audio 태그를 지원하지 않습니다.
+          </audio>
+        {% else %}
+          <p class="tb-help-text">음원 파일이 없습니다.</p>
+        {% endif %}
+      </div>
 
-  <a href="{% url 'twobeats_upload:music_update' music.pk %}">수정</a>
-  <a href="{% url 'twobeats_upload:music_delete' music.pk %}">삭제</a>
-  <a href="{% url 'twobeats_upload:music_list' %}">목록으로</a>
+      <!-- 메타 정보 -->
+      <div class="tb-track-meta">
+        <div class="tb-track-stats">
+          <span class="tb-stat-item">
+            ▶ {{ music.music_count }} plays
+          </span>
+        </div>
+
+        <div class="tb-track-tags">
+          {% for tag in music.tags.all %}
+            <span class="tb-tag-pill">{{ tag.name }}</span>
+          {% empty %}
+            <span class="tb-tag-pill tb-tag-pill-empty">태그 없음</span>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- 오른쪽: 앨범 아트 + 프로필 -->
+    <aside class="tb-track-side">
+      <div class="tb-track-artwork-card">
+        {% if music.music_thumbnail %}
+          <img src="{{ music.music_thumbnail.url }}"
+               alt="Artwork"
+               class="tb-track-artwork">
+        {% else %}
+          <div class="tb-track-artwork-placeholder">
+            <div class="tb-artwork-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24"
+                   fill="none" stroke="#94a3b8" stroke-width="1.5"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <path d="M21 15l-5-5L5 21"></path>
+              </svg>
+            </div>
+            <span class="tb-artwork-text">No artwork</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- 업로더 프로필 (간단) -->
+      <div class="tb-track-uploader">
+        <div class="tb-avatar">
+          {% if music.uploader %}
+            <span class="tb-avatar-initial">
+              {{ music.uploader.username|first|upper }}
+            </span>
+          {% else %}
+            <span class="tb-avatar-initial">U</span>
+          {% endif %}
+        </div>
+        <div class="tb-uploader-info">
+          <div class="tb-uploader-name">
+            {{ music.uploader.username }}
+          </div>
+          <div class="tb-uploader-caption">
+            Uploader
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 하단: 최소한의 네비게이션만 -->
+  <div class="tb-track-footer">
+    <a href="{% url 'twobeats_upload:music_list' %}" class="tb-link-light">
+      ← My Sound Space
+    </a>
+
+    <div class="tb-track-footer-actions">
+      <a href="{% url 'twobeats_upload:music_update' music.pk %}"
+         class="tb-link-light">
+        수정
+      </a>
+      <a href="{% url 'twobeats_upload:music_delete' music.pk %}"
+        onclick="return confirm('정말 삭제하시겠습니까?');">
+        삭제
+      </a>
+    </div>
+  </div>
+</div>
 {% endblock %}
+
+    <footer class="tb-track-footer">
+      <a href="{% url 'twobeats_upload:music_update' music.pk %}" class="tb-link-ghost">수정</a>
+      <a href="{% url 'twobeats_upload:music_delete' music.pk %}" class="tb-link-ghost">삭제</a>
+      <a href="{% url 'twobeats_upload:music_list' %}" class="tb-link-back">
+        ← My Video Space
+      </a>
+    </footer>

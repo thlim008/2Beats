@@ -2,36 +2,33 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1 class="tb-page-title">Music</h1>
-  <p class="tb-page-subtitle">음악 업로드</p>
+  <h1 class="tb-page-title">My Music</h1>
+  <p class="tb-page-subtitle">Upload your vibe, not just a file.</p>
 
   <div class="tb-header-actions">
-    <a href="{% url 'twobeats_upload:music_create' %}" class="tb-primary-btn">
+    <a href="{% url 'twobeats_upload:music_upload_start' %}" class="tb-upload-btn tb-upload-btn-primary">
       + 음악 업로드
     </a>
   </div>
   
   <div class="tb-toolbar">
-    <div class="tb-toolbar-group">
-      <a href="?order=latest{% if current_tag_id %}&tag={{ current_tag_id }}{% endif %}"
-         class="tb-chip {% if current_order == 'latest' %}active{% endif %}">
+    <div class="tb-list-filters">
+      <a href="?sort=latest"
+        class="tb-filter-pill {% if sort == 'latest' %}is-active{% endif %}">
         최신순
       </a>
-      <a href="?order=views{% if current_tag_id %}&tag={{ current_tag_id }}{% endif %}"
-         class="tb-chip {% if current_order == 'views' %}active{% endif %}">
+      <a href="?sort=views"
+        class="tb-filter-pill {% if sort == 'views' %}is-active{% endif %}">
         조회수순
       </a>
-      <a href="?order=likes{% if current_tag_id %}&tag={{ current_tag_id }}{% endif %}"
-         class="tb-chip {% if current_order == 'likes' %}active{% endif %}">
+      <a href="?sort=likes"
+        class="tb-filter-pill {% if sort == 'likes' %}is-active{% endif %}">
         좋아요순
       </a>
     </div>
 
+
     <div class="tb-toolbar-group">
-      <a href="?{% if current_order %}order={{ current_order }}{% endif %}"
-         class="tb-tag-chip {% if not current_tag_id %}active{% endif %}">
-        전체 태그
-      </a>
       {% for tag in tags %}
         <a href="?order={{ current_order }}&tag={{ tag.id }}"
            class="tb-tag-chip {% if current_tag_id|default:'' == tag.id|stringformat:'s' %}active{% endif %}">

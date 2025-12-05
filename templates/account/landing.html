@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>2beats | 음악·영상 큐레이션 플랫폼</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0a0f1a;
@@ -27,37 +28,8 @@
       align-items: center;
       justify-content: center;
       padding: 32px;
+      padding-top: 100px;
       position: relative;
-    }
-    .topbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 56px;
-      backdrop-filter: blur(12px);
-      background: rgba(12, 20, 36, 0.85);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      z-index: 10;
-    }
-    .brand {
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      text-decoration: none;
-    }
-    .nav-actions a {
-      color: var(--text);
-      text-decoration: none;
-      font-weight: 600;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
     }
     .hero {
       width: min(1080px, 100%);
@@ -146,12 +118,8 @@
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="{% url 'home' %}">2beats</a>
-    <div class="nav-actions">
-      <a href="{% url 'home' %}">홈으로</a>
-    </div>
-  </header>
+  {% include 'shared/navbar.html' %}
+
   <section class="hero">
     <div>
       <div class="badge">2beats · All-in-One Music & Video</div>

@@ -137,5 +137,5 @@ AUTH_USER_MODEL = 'twobeats_account.User'
 
 # Auth redirects
 LOGIN_URL = '/account/login/'
-LOGIN_REDIRECT_URL = '/account/home/'
+LOGIN_REDIRECT_URL = '/home/'
 LOGOUT_REDIRECT_URL = '/account/login/'

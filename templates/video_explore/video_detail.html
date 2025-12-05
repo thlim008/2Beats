@@ -291,6 +291,16 @@
                     </button>
                     {% endif %}
                 {% endif %}
+
+                {% if user.is_authenticated %}
+                <button class="action-btn" onclick="alert('플레이리스트 추가 기능 준비중입니다.')">
+                    ➕ 플레이리스트에 추가
+                </button>
+                {% else %}
+                <button class="action-btn" onclick="alert('로그인이 필요합니다.')">
+                    ➕ 플레이리스트에 추가
+                </button>
+                {% endif %}
             </div>
 
             <div class="video-meta">

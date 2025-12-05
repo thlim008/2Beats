@@ -110,7 +110,13 @@
 
 <nav class="shared-navbar">
     <ul>
-        <li><a href="{% url 'home' %}" class="logo">🎵 2Beats</a></li>
+        <li>
+            {% if user.is_authenticated %}
+                <a href="{% url 'home' %}" class="logo">🎵 2Beats</a>
+            {% else %}
+                <a href="{% url 'landing' %}" class="logo">🎵 2Beats</a>
+            {% endif %}
+        </li>
         <li><a href="{% url 'music_explore:search' %}">음악 검색</a></li>
         <li><a href="{% url 'music_explore:chart_all' %}">음악 차트</a></li>
         <li><a href="{% url 'video_explore:video_list' %}">영상</a></li>
@@ -118,19 +124,18 @@
 
         <li style="margin-left: auto;">
             {% if user.is_authenticated %}
-                <div class="user-area">
-                    <div class="user-avatar">{{ user.username|slice:":1"|upper }}</div>
-                    <span>{{ user.username }}</span>
-                </div>
+                <a href="{% url 'profile' %}" style="text-decoration: none;">
+                    <div class="user-area">
+                        <div class="user-avatar">{{ user.username|slice:":1"|upper }}</div>
+                        <span>{{ user.username }}</span>
+                    </div>
+                </a>
             {% else %}
                 <a href="{% url 'login' %}" class="btn-login">로그인</a>
             {% endif %}
         </li>
 
         {% if user.is_authenticated %}
-        <li>
-            <a href="{% url 'profile' %}">프로필</a>
-        </li>
         <li>
             <a href="{% url 'logout' %}">로그아웃</a>
         </li>

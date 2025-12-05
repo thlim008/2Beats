@@ -421,5 +421,13 @@ __marimo__/
 /media
 /staticfiles
 
+# Claude AI
+#  Claude AI local settings and configuration
+.claude/
+
+# Windows special files
+#  Windows reserved file names that can cause issues with Git
+nul
+
 
 create_dummy_music.py

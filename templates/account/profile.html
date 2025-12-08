@@ -21,6 +21,14 @@
         if (current) current.style.opacity = 0.4;
       });
     }
+    // 2. 전화번호 숫자만 입력 가능하도록 제한 (추가된 코드)
+    const phoneInput = document.getElementById('{{ form.phone_number.id_for_label }}');
+    if (phoneInput) {
+      phoneInput.addEventListener('input', (e) => {
+        // 입력된 값에서 숫자가 아닌 문자는 모두 빈 문자열로 치환
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+      });
+    }
   });
 </script>
 {% endblock %}

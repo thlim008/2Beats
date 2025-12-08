@@ -919,6 +919,12 @@
             currentTimeEl.textContent = formatTime(audio.currentTime);
         }
 
+        // 프로그레스 바 클릭으로 음악 구간 이동
+        progressBar.addEventListener('click', function(e) {
+            if (!audio.duration) return;
+            setProgressFromEvent(e);
+        });
+
         progressBar.addEventListener('mousedown', function(e) {
             if (!audio.duration) return;
             isDragging = true;

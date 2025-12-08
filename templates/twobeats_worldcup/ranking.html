@@ -46,13 +46,13 @@
     <h1>월드컵 랭킹</h1>
     <p>카테고리별 인기 월드컵을 확인하세요.</p>
     <div class="genre-nav">
-      <a class="genre-btn {% if current_genre == 'all' %}active{% endif %}" href="?genre=all">전체</a>
-      <a class="genre-btn {% if current_genre == 'ballad' %}active{% endif %}" href="?genre=ballad">발라드</a>
-      <a class="genre-btn {% if current_genre == 'dance' %}active{% endif %}" href="?genre=dance">댄스</a>
-      <a class="genre-btn {% if current_genre == 'hiphop' %}active{% endif %}" href="?genre=hiphop">힙합</a>
-      <a class="genre-btn {% if current_genre == 'rnb' %}active{% endif %}" href="?genre=rnb">R&B</a>
-      <a class="genre-btn {% if current_genre == 'indie' %}active{% endif %}" href="?genre=indie">인디</a>
-      <a class="genre-btn {% if current_genre == 'ost' %}active{% endif %}" href="?genre=ost">OST</a>
+      <a class="genre-btn {% if selected_genre == 'all' %}active{% endif %}" href="?genre=all">전체</a>
+      <a class="genre-btn {% if selected_genre == 'ballad' %}active{% endif %}" href="?genre=ballad">발라드</a>
+      <a class="genre-btn {% if selected_genre == 'dance' %}active{% endif %}" href="?genre=dance">댄스</a>
+      <a class="genre-btn {% if selected_genre == 'hiphop' %}active{% endif %}" href="?genre=hiphop">힙합</a>
+      <a class="genre-btn {% if selected_genre == 'rnb' %}active{% endif %}" href="?genre=rnb">R&B</a>
+      <a class="genre-btn {% if selected_genre == 'indie' %}active{% endif %}" href="?genre=indie">인디</a>
+      <a class="genre-btn {% if selected_genre == 'ost' %}active{% endif %}" href="?genre=ost">OST</a>
     </div>
   </div>
 
@@ -62,17 +62,17 @@
         <tr>
           <th>#</th>
           <th>제목</th>
-          <th>생성자</th>
-          <th>플레이 수</th>
-        </tr>
+          <th>아티스트</th> <th>총점 (우승)</th> </tr>
       </thead>
       <tbody>
-        {% for item in ranking %}
+        {% for item in rankings %}
           <tr>
             <td>{{ forloop.counter }}</td>
-            <td><a href="{% url 'twobeats_worldcup:game_page' item.access_code %}" style="color:var(--text); text-decoration:none;">{{ item.title }}</a></td>
-            <td class="muted">{{ item.creator.username }}</td>
-            <td class="muted">{{ item.play_count }}</td>
+            <td>
+                <span style="color:var(--text); font-weight:bold;">{{ item.music_title }}</span>
+            </td>
+            <td class="muted">{{ item.music_singer }}</td>
+            <td class="muted">{{ item.total_score }}점 ({{ item.win_count }}회 우승)</td>
           </tr>
         {% empty %}
           <tr><td colspan="4" class="muted">아직 랭킹 데이터가 없습니다.</td></tr>

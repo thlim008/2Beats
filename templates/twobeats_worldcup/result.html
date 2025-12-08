@@ -56,22 +56,27 @@
 
   <div class="card">
     <div class="winner-card">
-      <img src="{{ winner.thumbnail_url|default:'https://via.placeholder.com/400x260?text=No+Image' }}" alt="winner">
+      {% if winner.wc_music.music_thumbnail %}
+        <img src="{{ winner.wc_music.music_thumbnail.url }}" alt="winner">
+      {% else %}
+        <img src="https://via.placeholder.com/400x260?text=No+Image" alt="winner">
+      {% endif %}
+      
       <div class="winner-info">
-        <h2>{{ winner.title }}</h2>
-        <p>{{ winner.singer }}</p>
+        <h2>{{ winner.wc_music.music_title }}</h2>
+        <p>{{ winner.wc_music.music_singer }}</p>
       </div>
     </div>
 
-    {% if rankings %}
+    {% if others %}
       <div class="history-list">
-        {% for r in rankings %}
+        {% for r in others %}
         <div class="history-item">
           <div>
-            <div class="title">{{ r.music.music_title }}</div>
-            <div class="meta">{{ r.music.music_singer }}</div>
+            <div class="title">{{ r.wc_music.music_title }}</div>
+            <div class="meta">{{ r.wc_music.music_singer }}</div>
           </div>
-          <div class="meta">순위: {{ r.rank }}</div>
+          <div class="meta">순위: {{ r.wc_final_rank }}</div>
         </div>
         {% endfor %}
       </div>

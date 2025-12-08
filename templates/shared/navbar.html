@@ -443,7 +443,15 @@
                 </div>
             </div>
 
-            <a href="{% url 'video_explore:video_list' %}">영상</a>
+            <!-- 영상 메뉴 (드롭다운) -->
+            <div class="navbar-menu-item">
+                <a href="{% url 'video_explore:video_list' %}">영상</a>
+                <div class="dropdown-menu">
+                    <a href="{% url 'video_explore:video_list' %}">검색</a>
+                    <a href="{% url 'video_explore:video_chart' %}">차트</a>
+                </div>
+            </div>
+
             <a href="{% url 'twobeats_worldcup:play' %}">월드컵</a>
 
             <!-- 로그인 상태에서만 표시되는 메뉴 -->

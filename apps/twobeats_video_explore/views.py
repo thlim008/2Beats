@@ -520,6 +520,30 @@ def download_video(request, video_id):
     return response
 
 
+def video_chart_all(request):
+    """영상 통합 차트 (탭)"""
+    # 인기 차트 (조회수*3 + 재생수*2 + 좋아요*4)
+    popular_videos = Video.objects.annotate(
+        popularity_score=ExpressionWrapper(
+            (F('video_views') * 3) + (F('video_play_count') * 2) + (F('video_like_count') * 4),
+            output_field=IntegerField()
+        )
+    ).order_by('-popularity_score')[:30]
+
+    # 최신 차트 (업로드순)
+    latest_videos = Video.objects.all().order_by('-video_created_at')[:30]
+
+    # 좋아요 차트 (좋아요순)
+    liked_videos = Video.objects.all().order_by('-video_like_count')[:30]
+
+    context = {
+        'popular_videos': popular_videos,
+        'latest_videos': latest_videos,
+        'liked_videos': liked_videos,
+    }
+    return render(request, 'video_explore/video_chart.html', context)
+
+
 def autocomplete(request):
     """검색 자동완성 (AJAX)"""
 

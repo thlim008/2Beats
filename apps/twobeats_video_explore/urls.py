@@ -14,6 +14,9 @@ urlpatterns = [
     # 검색
     path('search/', views.video_search, name='video_search'),
 
+    # 차트
+    path('chart/', views.video_chart_all, name='video_chart'),
+
     # 검색 자동완성 (AJAX)
     path('autocomplete/', views.autocomplete, name='autocomplete'),
 

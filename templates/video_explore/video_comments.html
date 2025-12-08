@@ -17,16 +17,19 @@
     .comment-form textarea {
         width: 100%;
         padding: 15px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
         resize: vertical;
         min-height: 100px;
         font-family: inherit;
+        background: #0c0a18;
+        color: var(--text);
     }
 
     .comment-form textarea:focus {
         outline: none;
-        border-color: #00CD3C;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
     }
 
     .comment-form button {
@@ -129,11 +132,13 @@
     .comment-edit-form textarea {
         width: 100%;
         padding: 10px;
-        border: 2px solid #00CD3C;
-        border-radius: 5px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
         resize: vertical;
         min-height: 60px;
         font-family: inherit;
+        background: #0c0a18;
+        color: var(--text);
     }
 
     .comment-edit-form .btn-group {

@@ -221,21 +221,23 @@
     .comment-input {
         width: 100%;
         padding: 0.9rem 1rem;
-        border: 2px solid #e8e8e8;
+        border: 1px solid var(--border);
         border-radius: 12px;
         font-size: 0.95rem;
         resize: none;
         transition: all 0.2s;
         font-family: inherit;
-        background-color: #fafafa;
+        background-color: #0c0a18;
+        color: var(--text);
     }
-    
+
     .comment-input:focus {
         outline: none;
-        border-color: #1db954;
-        background-color: #fff;
-        box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+        border-color: var(--accent);
+        background-color: #0e0c1c;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
     }
+    .comment-input::placeholder { color: var(--muted); }
     
     .comment-submit-row {
         display: flex;
@@ -668,7 +670,33 @@ function addToPlaylistFromDetail() {
     showToast('로그인이 필요합니다.', 'error');
     return;
     {% else %}
-    showToast('플레이리스트 기능 준비중입니다.', 'info');
+    const musicId = {{ music.id }};
+    const csrftoken = getCookie('csrftoken');
+
+    fetch('/account/api/playlist/add-music/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: `music_id=${encodeURIComponent(musicId)}`,
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (data.removed) {
+                showToast('플레이리스트에서 제거했습니다.', 'info');
+            } else {
+                showToast('나의 플레이리스트에 추가했어요.', 'success');
+            }
+        } else {
+            showToast(data.error || '처리에 실패했습니다.', 'error');
+        }
+    })
+    .catch(() => {
+        showToast('추가/제거 중 오류가 발생했습니다.', 'error');
+    });
     {% endif %}
 }
 

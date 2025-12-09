@@ -440,11 +440,9 @@
         if (isShuffled) {
             btn.classList.add('active');
             btn.classList.remove('shuffle-off');
-            showToast('셔플 켜짐');
         } else {
             btn.classList.remove('active');
             btn.classList.add('shuffle-off');
-            showToast('셔플 꺼짐');
         }
     }
 
@@ -452,9 +450,9 @@
         repeatMode = (repeatMode + 1) % 3;
         const btn = document.getElementById('repeat-btn');
         switch(repeatMode) {
-            case 0: btn.textContent = '🔁'; btn.classList.remove('active'); showToast('반복 꺼짐'); break;
-            case 1: btn.textContent = '🔁'; btn.classList.add('active'); showToast('전체 반복'); break;
-            case 2: btn.textContent = '🔂'; btn.classList.add('active'); showToast('한곡 반복'); break;
+            case 0: btn.textContent = '🔁'; btn.classList.remove('active'); break;
+            case 1: btn.textContent = '🔁'; btn.classList.add('active'); break;
+            case 2: btn.textContent = '🔂'; btn.classList.add('active'); break;
         }
     }
 

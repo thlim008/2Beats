@@ -46,7 +46,7 @@
         {% if music.music_thumbnail %}
           <img src="{{ music.music_thumbnail.url }}" alt="{{ music.music_title }}">
         {% else %}
-          <img src="{% static 'images/default-music-thumbnail.png' %}" alt="{{ music.music_title }}">
+          <img src="{% static 'default-music-thumbnail.png' %}" alt="{{ music.music_title }}">
         {% endif %}
         
         <!-- 플레이 오버레이 -->

@@ -17,3 +17,8 @@ sqlparse==0.5.3
 tqdm==4.67.1
 tzdata==2025.2
 wheel==0.45.1
+gunicorn==21.2.0
+boto3==1.34.0
+django-storages==1.14.2
+psycopg2-binary==2.9.9
+dj-database-url==2.1.0

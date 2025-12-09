@@ -1,35 +1,52 @@
-# Python 3.12 slim 버전 사용
-FROM python:3.12-slim
+# ==========================================
+# Stage 1: Builder (빌드 단계)
+# ==========================================
+FROM python:3.12-slim as builder
 
-# 작업 디렉토리 설정
 WORKDIR /app
 
-# 시스템 의존성 설치 (PostgreSQL, Pillow 관련 라이브러리 등)
-# 3.12-slim에서도 동일한 의존성이 필요합니다.
-RUN apt-get update && apt-get install -y \
+# 빌드 도구 설치
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     libjpeg-dev \
     zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python 패키지 설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+
+# ==========================================
+# Stage 2: Runtime (실행 단계)
+# ==========================================
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# 런타임 라이브러리만 설치
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    libjpeg62-turbo \
+    zlib1g \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# 환경 변수 설정
-# Python이 pyc 파일을 쓰지 않도록 함
-ENV PYTHONDONTWRITEBYTECODE 1
-# Python 로그가 버퍼링 없이 출력되도록 함
-ENV PYTHONUNBUFFERED 1
+# 환경 변수
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH=/root/.local/bin:$PATH
 
-# requirements.txt 복사 및 설치
-COPY requirements.txt /app/
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# Builder에서 Python 패키지 복사
+COPY --from=builder /root/.local /root/.local
 
-# 프로젝트 코드 복사
-COPY . /app/
+# 프로젝트 코드 복사 (.dockerignore 적용됨)
+COPY . .
 
-# Gunicorn 실행 (포트 8000)
-CMD python manage.py migrate && \
-    python manage.py init_tags && \
-    gunicorn config.wsgi:application --bind 0.0.0.0:8000
+# 포트
+EXPOSE 8000
+
+# Gunicorn 실행
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "config.wsgi:application"]

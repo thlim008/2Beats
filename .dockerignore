@@ -1,26 +1,89 @@
 # Git 관리 디렉토리 제외
 .git
 .gitignore
+.gitattributes
 
 # 가상 환경 제외 (로컬 개발용)
 venv/
 env/
 .venv/
+ENV/
+env.bak/
+venv.bak/
 
 # 환경 변수 파일 제외 (보안 중요)
 .env
+.envrc
 
 # Python 컴파일 파일 및 캐시 제외
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
-# 로컬 미디어 및 정적 파일 (S3 사용 시 불필요, collectstatic으로 모아짐)
+# 로컬 미디어 및 정적 파일
 media/
 staticfiles/
 
-# 로컬 DB 파일 (Docker에서는 postgres 컨테이너 사용하므로 제외)
+# 로컬 DB 파일
 db.sqlite3
+db.sqlite3-journal
+
+# 🔥 추가: IDE 설정 파일
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 🔥 추가: 테스트 관련
+.pytest_cache/
+.coverage
+.tox/
+.nox/
+htmlcov/
+cover/
+nosetests.xml
+coverage.xml
+*.cover
+
+# 🔥 추가: 문서
+README.md
+*.md
+docs/
+LICENSE
+
+# 🔥 추가: Docker 관련 (중복 방지)
+Dockerfile
+docker-compose.yml
+.dockerignore
+*.dockerfile
+
+# 🔥 추가: CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# 🔥 추가: 프로젝트 특화
+project-status/
+create_dummy_music.py
+
+# 🔥 추가: 로그 파일
+*.log
+logs/
+
+# 🔥 추가: Claude AI
+.claude/
 
 # 기타 시스템 파일
 .DS_Store
+Thumbs.db
+nul

@@ -6,7 +6,7 @@ from django.core.cache import cache  # video_detail: 관련 영상 추천 캐싱
 from django.db.models import Q, Count, F, ExpressionWrapper, IntegerField, Case, When, FloatField  # video_detail: 하이브리드 추천 알고리즘
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from apps.twobeats_account.models import VideoHistory
+from apps.twobeats_account.models import VideoHistory, VideoPlaylist
 from django.utils import timezone  # video_detail: 신규 영상 보너스 계산, 히스토리 시각 업데이트
 from datetime import timedelta  # video_detail: 최근 7일 필터링
 import mimetypes
@@ -276,6 +276,13 @@ def video_detail(request, video_id):
     seconds = video.video_time % 60
     formatted_time = f"{minutes:02d}:{seconds:02d}"
 
+    # 현재 로그인한 사용자의 영상 플레이리스트 목록 조회
+    user_playlists = []
+    if request.user.is_authenticated:
+        user_playlists = VideoPlaylist.objects.filter(
+            user=request.user
+        ).order_by('-created_at')
+
     context = {
         'video': video,
         'is_liked': is_liked,
@@ -284,6 +291,7 @@ def video_detail(request, video_id):
         'tags': tags,
         'related_videos': related_videos,
         'formatted_time': formatted_time,
+        'user_playlists': user_playlists,
     }
 
     return render(request, 'video_explore/video_detail.html', context)

@@ -25,6 +25,16 @@ urlpatterns = [
         name='add_music_to_playlist',
     ),
     path(
+        'api/playlist/add-video/',
+        views.add_video_to_playlist,
+        name='add_video_to_playlist',
+    ),
+    path(
+        'api/get-playlists/',
+        views.get_playlists,
+        name='get_playlists',
+    ),
+    path(
         'history/',
         views.history,
         name='history',

@@ -22,6 +22,7 @@ from .models import (
     MusicPlaylist,
     VideoPlaylist,
     PlaylistTrack,
+    PlaylistClip,
 )
 
 # 통계 데이터를 위한 import
@@ -221,7 +222,7 @@ def add_music_to_playlist(request):
     try:
         # 마지막 순서 구하기
         last_order = PlaylistTrack.objects.filter(playlist=playlist).count()
-        
+
         PlaylistTrack.objects.create(
             playlist=playlist,
             music=music,
@@ -233,3 +234,59 @@ def add_music_to_playlist(request):
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def add_video_to_playlist(request):
+    """
+    영상 상세 페이지에서 특정 플레이리스트에 영상 추가
+    """
+    import json
+    data = json.loads(request.body)
+    video_id = data.get('video_id')
+    playlist_id = data.get('playlist_id')
+
+    if not video_id or not playlist_id:
+        return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'}, status=400)
+
+    # 내 플레이리스트인지 확인
+    playlist = get_object_or_404(VideoPlaylist, id=playlist_id, user=request.user)
+    video = get_object_or_404(Video, pk=video_id)
+
+    # 중복 체크
+    if PlaylistClip.objects.filter(playlist=playlist, video=video).exists():
+        return JsonResponse({'success': False, 'message': '이미 이 플레이리스트에 담긴 영상입니다.'})
+
+    try:
+        # 마지막 순서 구하기
+        last_order = PlaylistClip.objects.filter(playlist=playlist).count()
+
+        PlaylistClip.objects.create(
+            playlist=playlist,
+            video=video,
+            order=last_order + 1,
+        )
+        return JsonResponse({
+            'success': True,
+            'message': f"'{playlist.folder_name}'에 추가되었습니다."
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@login_required
+def get_playlists(request):
+    """
+    사용자의 플레이리스트 목록 반환 (AJAX용)
+    """
+    playlist_type = request.GET.get('type', 'music')  # 'music' or 'video'
+
+    if playlist_type == 'music':
+        playlists = MusicPlaylist.objects.filter(user=request.user).order_by('-created_at')
+        playlist_data = [{'id': pl.id, 'folder_name': pl.folder_name} for pl in playlists]
+    else:
+        playlists = VideoPlaylist.objects.filter(user=request.user).order_by('-created_at')
+        playlist_data = [{'id': pl.id, 'folder_name': pl.folder_name} for pl in playlists]
+
+    return JsonResponse({'playlists': playlist_data})

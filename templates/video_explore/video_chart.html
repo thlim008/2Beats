@@ -312,6 +312,11 @@
             {% else %}
             <img src="https://via.placeholder.com/400x225?text=No+Thumbnail" alt="No Thumbnail" class="thumbnail">
             {% endif %}
+            {% if video.video_time %}
+            <div class="duration">
+              {{ video.formatted_time }}
+            </div>
+            {% endif %}
           </div>
           <div class="info">
             <div class="title">{{ video.video_title }}</div>
@@ -354,6 +359,11 @@
             {% else %}
             <img src="https://via.placeholder.com/400x225?text=No+Thumbnail" alt="No Thumbnail" class="thumbnail">
             {% endif %}
+            {% if video.video_time %}
+            <div class="duration">
+              {{ video.formatted_time }}
+            </div>
+            {% endif %}
           </div>
           <div class="info">
             <div class="title">{{ video.video_title }}</div>
@@ -395,6 +405,11 @@
             <img src="{{ video.video_thumbnail.url }}" alt="{{ video.video_title }}" class="thumbnail">
             {% else %}
             <img src="https://via.placeholder.com/400x225?text=No+Thumbnail" alt="No Thumbnail" class="thumbnail">
+            {% endif %}
+            {% if video.video_time %}
+            <div class="duration">
+              {{ video.formatted_time }}
+            </div>
             {% endif %}
           </div>
           <div class="info">

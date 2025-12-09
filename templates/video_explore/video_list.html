@@ -361,7 +361,7 @@
         {% endif %}
         {% if video.video_time %}
         <div class="duration">
-          {% widthratio video.video_time 60 1 %}:{% widthratio video.video_time 60 1 as minutes %}{{ video.video_time|add:"-"|add:minutes|stringformat:"02d" }}
+          {{ video.formatted_time }}
         </div>
         {% endif %}
       </div>

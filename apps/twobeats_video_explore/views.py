@@ -70,6 +70,12 @@ def video_list(request, video_type=None):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
+    # 각 영상에 포맷팅된 재생 시간 추가
+    for video in page_obj.object_list:
+        minutes = video.video_time // 60
+        seconds = video.video_time % 60
+        video.formatted_time = f"{minutes}:{seconds:02d}"
+
     # 영상 타입 선택지 가져오기
     video_types = Video.GENRE_CHOICES
 
@@ -540,6 +546,22 @@ def video_chart_all(request):
 
     # 좋아요 차트 (좋아요순)
     liked_videos = Video.objects.all().order_by('-video_like_count')[:30]
+
+    # 각 차트의 영상에 포맷팅된 재생 시간 추가
+    for video in popular_videos:
+        minutes = video.video_time // 60
+        seconds = video.video_time % 60
+        video.formatted_time = f"{minutes}:{seconds:02d}"
+
+    for video in latest_videos:
+        minutes = video.video_time // 60
+        seconds = video.video_time % 60
+        video.formatted_time = f"{minutes}:{seconds:02d}"
+
+    for video in liked_videos:
+        minutes = video.video_time // 60
+        seconds = video.video_time % 60
+        video.formatted_time = f"{minutes}:{seconds:02d}"
 
     context = {
         'popular_videos': popular_videos,

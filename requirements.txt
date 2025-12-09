@@ -7,9 +7,8 @@ setuptools==80.9.0
 sqlparse==0.5.3
 tzdata==2025.2
 wheel==0.45.1
-# 배포 및 AWS 연동 패키지
 gunicorn==21.2.0
 boto3==1.34.0
 django-storages==1.14.2
 psycopg2-binary==2.9.9
-dj-database-url==3.1.0
+dj-database-url==2.1.0

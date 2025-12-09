@@ -9,6 +9,7 @@ from apps.twobeats_music_explore.models import MusicLike, MusicComment
 from apps.twobeats_video_explore.models import VideoLike, VideoComment
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
+from moviepy import VideoFileClip
 
 # === Music CRUD ===
 
@@ -208,12 +209,20 @@ def video_upload_start(request):
             video_file = form.cleaned_data['video_root']
             base_title = os.path.splitext(video_file.name)[0]
 
+            # 영상 재생 시간 자동 추출
+            try:
+                with VideoFileClip(video_file.temporary_file_path()) as clip:
+                    video_time = int(clip.duration)  # 초 단위
+            except Exception:
+                video_time = 0  # 추출 실패 시 0
+
             video = Video(
                 video_title=base_title,
                 video_singer=request.user.username or "Unknown",
                 video_type='etc',
                 video_root=video_file,
                 video_user=request.user,
+                video_time=video_time,
             )
             video.save()
 

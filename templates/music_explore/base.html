@@ -472,6 +472,57 @@
             border-top: 1px solid var(--border);
             box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
         }
+
+        /* 플레이리스트 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .playlist-modal {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .playlist-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .playlist-item {
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .playlist-item:hover {
+            background-color: #f0fdf4;
+            border-color: #1db954;
+            color: #1db954;
+        }
+        .modal-close {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            color: #999;
+        }
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -887,7 +938,27 @@
             {% if not user.is_authenticated %}
             showToast('로그인이 필요합니다.', 'error');
             return;
+            {% else %}
+            // 플레이리스트 선택 모달 열기
+            const modal = document.getElementById('player-playlist-modal');
+            if (modal) {
+                modal.classList.add('active');
+            }
             {% endif %}
+        }
+
+        function closePlayerPlaylistModal() {
+            const modal = document.getElementById('player-playlist-modal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        function addMusicToPlaylistFromPlayer(playlistId, playlistName) {
+            if (!currentMusicData) {
+                showToast('먼저 음악을 재생해주세요.', 'error');
+                return;
+            }
 
             const musicId = currentMusicData.id;
             const csrftoken = getCookie('csrftoken');
@@ -899,22 +970,20 @@
                     'X-CSRFToken': csrftoken,
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-                body: `music_id=${encodeURIComponent(musicId)}`,
+                body: `music_id=${encodeURIComponent(musicId)}&playlist_id=${encodeURIComponent(playlistId)}`,
             })
             .then(res => res.json())
             .then(data => {
+                closePlayerPlaylistModal();
                 if (data.success) {
-                    if (data.removed) {
-                        showToast('플레이리스트에서 제거했습니다.', 'info');
-                    } else {
-                        showToast('나의 플레이리스트에 추가했어요.', 'success');
-                    }
+                    showToast(`'${playlistName}' 플레이리스트에 추가되었습니다.`, 'success');
                 } else {
-                    showToast(data.error || '처리에 실패했습니다.', 'error');
+                    showToast(data.error || data.message || '처리에 실패했습니다.', 'error');
                 }
             })
             .catch(() => {
-                showToast('추가/제거 중 오류가 발생했습니다.', 'error');
+                closePlayerPlaylistModal();
+                showToast('추가 중 오류가 발생했습니다.', 'error');
             });
         }
         
@@ -1110,66 +1179,217 @@
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 return;
             }
-            
+
+            const volumeSlider = document.getElementById('volume-slider');
+
             switch(e.code) {
                 case 'Space':
                     e.preventDefault();
                     togglePlay();
                     break;
+
                 case 'ArrowLeft':
+                    e.preventDefault();
                     if (audio.src) {
-                        audio.currentTime -= 5;
+                        audio.currentTime = Math.max(0, audio.currentTime - 5);
                     }
                     break;
+
                 case 'ArrowRight':
+                    e.preventDefault();
                     if (audio.src) {
-                        audio.currentTime += 5;
+                        audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
                     }
                     break;
+
                 case 'ArrowUp':
                     e.preventDefault();
-                    changeVolume(Math.min(100, audio.volume * 100 + 10));
-                    document.getElementById('volume-slider').value = audio.volume * 100;
+                    // 볼륨 10% 증가
+                    audio.volume = Math.min(1, audio.volume + 0.1);
+                    if (volumeSlider) {
+                        volumeSlider.value = audio.volume * 100;
+                    }
+                    updateVolumeIcon(audio.volume * 100);
                     break;
+
                 case 'ArrowDown':
                     e.preventDefault();
-                    changeVolume(Math.max(0, audio.volume * 100 - 10));
-                    document.getElementById('volume-slider').value = audio.volume * 100;
+                    // 볼륨 10% 감소
+                    audio.volume = Math.max(0, audio.volume - 0.1);
+                    if (volumeSlider) {
+                        volumeSlider.value = audio.volume * 100;
+                    }
+                    updateVolumeIcon(audio.volume * 100);
+                    break;
+
+                case 'KeyM':
+                    e.preventDefault();
+                    toggleMute();
                     break;
             }
         });
-        audio.addEventListener('play', function() {
-            if (currentMusicData) {
-                const btn = document.querySelector(`[data-id="${currentMusicData.id}"].chart-play-btn, [data-id="${currentMusicData.id}"].music-play-btn`);
-                if (btn) btn.textContent = '⏸';
+
+        // 볼륨 슬라이더 휠 이벤트
+        const volumeSlider = document.getElementById('volume-slider');
+        volumeSlider.addEventListener('input', function() {
+            const volume = this.value / 100;  // 0-100을 0-1로 변환
+            audio.volume = volume;
+            console.log('Slider changed:', volume);  // 🔥 디버깅
+            updateVolumeIcon();
+        });
+
+        // 키보드로 볼륨 조절 시 슬라이더도 업데이트
+        window.addEventListener('keydown', function(e) {
+            // 입력 중이면 무시
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            switch(e.code) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    // 볼륨 10% 증가
+                    let newVolUp = Math.min(1, audio.volume + 0.1);
+                    audio.volume = newVolUp;
+                    volumeSlider.value = newVolUp * 100;
+                    updateVolumeIcon(newVolUp * 100);
+                    break;
+
+                case 'ArrowDown':
+                    e.preventDefault();
+                    // 볼륨 10% 감소
+                    let newVolDown = Math.max(0, audio.volume - 0.1);
+                    audio.volume = newVolDown;
+                    volumeSlider.value = newVolDown * 100;
+                    updateVolumeIcon(newVolDown * 100);
+                    break;
+
+                case 'Space':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    if (audio.src) {
+                        audio.currentTime = Math.max(0, audio.currentTime - 5);
+                    }
+                    break;
+
+                case 'ArrowRight':
+                    e.preventDefault();
+                    if (audio.src) {
+                        audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+                    }
+                    break;
+
+                case 'KeyM':
+                    e.preventDefault();
+                    toggleMute();
+                    break;
             }
         });
 
-        audio.addEventListener('pause', function() {
-            if (currentMusicData) {
-                const btn = document.querySelector(`[data-id="${currentMusicData.id}"].chart-play-btn, [data-id="${currentMusicData.id}"].music-play-btn`);
-                if (btn) btn.textContent = '▶';
-            }
-        });
-        
         // 마우스 휠로 볼륨 조절
-        document.getElementById('volume-slider').addEventListener('wheel', function(e) {
+        volumeSlider.addEventListener('wheel', function(e) {
             e.preventDefault();
 
-            let currentVolume = parseInt(this.value);
+            let delta = e.deltaY > 0 ? -5 : 5;  // 5% 단위
+            let newValue = Math.max(0, Math.min(100, parseInt(this.value) + delta));
 
-            if (e.deltaY < 0) {
-                // 휠 위로 → 볼륨 업
-                currentVolume = Math.min(100, currentVolume + 5);
-            } else {
-                // 휠 아래로 → 볼륨 다운
-                currentVolume = Math.max(0, currentVolume - 5);
-            }
-
-            this.value = currentVolume;
-            changeVolume(currentVolume);
+            this.value = newValue;
+            audio.volume = newValue / 100;
+            updateVolumeIcon(newValue);
         });
 
+        // 플레이어 영역에서 휠로 볼륨 조절
+        document.getElementById('bottom-player').addEventListener('wheel', function(e) {
+            // 프로그레스 바 위에서는 무시
+            if (e.target.closest('.progress-bar') || e.target.closest('.progress-container')) {
+                return;
+            }
+            
+            e.preventDefault();
+
+            let delta = e.deltaY > 0 ? -5 : 5;
+            let currentValue = parseInt(volumeSlider.value);
+            let newValue = Math.max(0, Math.min(100, currentValue + delta));
+
+            volumeSlider.value = newValue;
+            audio.volume = newValue / 100;
+            updateVolumeIcon(newValue);
+        });
+
+    </script>
+
+    <!-- 플레이바용 플레이리스트 모달 -->
+    <div id="player-playlist-modal" class="modal-overlay" onclick="if(event.target === this) closePlayerPlaylistModal()">
+        <div class="playlist-modal">
+            <span class="modal-close" onclick="closePlayerPlaylistModal()">&times;</span>
+            <h3 style="margin-bottom: 0.5rem; color: #222;">플레이리스트에 추가</h3>
+            <p style="color:#666; font-size:0.9rem;">이 곡을 어디에 저장할까요?</p>
+
+            <ul class="playlist-list" id="player-playlist-list">
+                <li style="text-align:center; padding:20px; color:#999;">
+                    불러오는 중...
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 플레이리스트 목록 로드
+        function loadPlaylistsForPlayer() {
+            {% if user.is_authenticated %}
+            fetch('/account/api/get-playlists/?type=music')
+                .then(res => res.json())
+                .then(data => {
+                    const listEl = document.getElementById('player-playlist-list');
+                    if (data.playlists && data.playlists.length > 0) {
+                        listEl.innerHTML = data.playlists.map(pl => `
+                            <li class="playlist-item" onclick="addMusicToPlaylistFromPlayer(${pl.id}, '${pl.folder_name.replace(/'/g, "\\'")}')">
+                                <span>📂 ${pl.folder_name}</span>
+                                <span style="font-size:0.8rem; color:#999;">+</span>
+                            </li>
+                        `).join('');
+                    } else {
+                        listEl.innerHTML = `
+                            <li style="text-align:center; padding:20px; color:#999;">
+                                생성된 플레이리스트가 없습니다.<br>
+                                <a href="/account/mylist?tab=music" style="color:#1db954; text-decoration:none;">새로 만들기</a>
+                            </li>
+                        `;
+                    }
+                })
+                .catch(() => {
+                    const listEl = document.getElementById('player-playlist-list');
+                    listEl.innerHTML = '<li style="text-align:center; padding:20px; color:#999;">불러오기 실패</li>';
+                });
+            {% endif %}
+        }
+
+        // 페이지 로드 시 addToPlaylist 함수 확장
+        document.addEventListener('DOMContentLoaded', function() {
+            const playlistBtn = document.querySelector('#bottom-player button[onclick*="addToPlaylist"]');
+            if (playlistBtn) {
+                playlistBtn.onclick = function() {
+                    if (!currentMusicData) {
+                        showToast('먼저 음악을 재생해주세요.', 'error');
+                        return;
+                    }
+                    {% if not user.is_authenticated %}
+                    showToast('로그인이 필요합니다.', 'error');
+                    return;
+                    {% else %}
+                    loadPlaylistsForPlayer();
+                    const modal = document.getElementById('player-playlist-modal');
+                    if (modal) {
+                        modal.classList.add('active');
+                    }
+                    {% endif %}
+                };
+            }
+        });
     </script>
 
     {% block extra_js %}{% endblock %}

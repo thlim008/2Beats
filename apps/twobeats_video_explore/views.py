@@ -6,8 +6,8 @@ from django.core.cache import cache  # video_detail: 관련 영상 추천 캐싱
 from django.db.models import Q, Count, F, ExpressionWrapper, IntegerField, Case, When, FloatField  # video_detail: 하이브리드 추천 알고리즘
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from apps.twobeats_account.models import VideoHistory
-from django.utils import timezone  # video_detail: 신규 영상 보너스 계산
+from apps.twobeats_account.models import VideoHistory, VideoPlaylist
+from django.utils import timezone  # video_detail: 신규 영상 보너스 계산, 히스토리 시각 업데이트
 from datetime import timedelta  # video_detail: 최근 7일 필터링
 import mimetypes
 import logging  # video_detail: 추천 알고리즘 에러 로깅
@@ -69,6 +69,12 @@ def video_list(request, video_type=None):
     paginator = Paginator(videos, 16)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
+
+    # 각 영상에 포맷팅된 재생 시간 추가
+    for video in page_obj.object_list:
+        minutes = video.video_time // 60
+        seconds = video.video_time % 60
+        video.formatted_time = f"{minutes}:{seconds:02d}"
 
     # 영상 타입 선택지 가져오기
     video_types = Video.GENRE_CHOICES
@@ -270,6 +276,13 @@ def video_detail(request, video_id):
     seconds = video.video_time % 60
     formatted_time = f"{minutes:02d}:{seconds:02d}"
 
+    # 현재 로그인한 사용자의 영상 플레이리스트 목록 조회
+    user_playlists = []
+    if request.user.is_authenticated:
+        user_playlists = VideoPlaylist.objects.filter(
+            user=request.user
+        ).order_by('-created_at')
+
     context = {
         'video': video,
         'is_liked': is_liked,
@@ -278,6 +291,7 @@ def video_detail(request, video_id):
         'tags': tags,
         'related_videos': related_videos,
         'formatted_time': formatted_time,
+        'user_playlists': user_playlists,
     }
 
     return render(request, 'video_explore/video_detail.html', context)
@@ -327,27 +341,32 @@ def increase_play_count(request, video_id):
 
     video = get_object_or_404(Video, pk=video_id)
 
-    # 재생수 증가 (세션으로 중복 방지)
+    # 재생수 증가는 세션으로 중복 방지
     played_key = f'played_video_{video_id}'
     if not request.session.get(played_key):
         video.video_play_count += 1
         video.save(update_fields=['video_play_count'])
         request.session[played_key] = True
-        if request.user.is_authenticated:
-            try:
+
+    # 히스토리는 세션과 관계없이 항상 업데이트 (로그인 사용자만)
+    if request.user.is_authenticated:
+        try:
+            # 기존 히스토리가 있으면 재생 시각만 업데이트
+            updated = VideoHistory.objects.filter(
+                user=request.user,
+                video=video
+            ).update(played_at=timezone.now())
+
+            # 기존 히스토리가 없으면 새로 생성
+            if not updated:
                 VideoHistory.objects.create(user=request.user, video=video)
-            except Exception:
-                pass
-        return JsonResponse({
-            'success': True,
-            'play_count': video.video_play_count,
-            'message': '재생수 증가'
-        })
+        except Exception:
+            pass
 
     return JsonResponse({
-        'success': False,
+        'success': True,
         'play_count': video.video_play_count,
-        'message': '이미 카운트됨'
+        'message': '처리 완료'
     })
 
 
@@ -535,6 +554,22 @@ def video_chart_all(request):
 
     # 좋아요 차트 (좋아요순)
     liked_videos = Video.objects.all().order_by('-video_like_count')[:30]
+
+    # 각 차트의 영상에 포맷팅된 재생 시간 추가
+    for video in popular_videos:
+        minutes = video.video_time // 60
+        seconds = video.video_time % 60
+        video.formatted_time = f"{minutes}:{seconds:02d}"
+
+    for video in latest_videos:
+        minutes = video.video_time // 60
+        seconds = video.video_time % 60
+        video.formatted_time = f"{minutes}:{seconds:02d}"
+
+    for video in liked_videos:
+        minutes = video.video_time // 60
+        seconds = video.video_time % 60
+        video.formatted_time = f"{minutes}:{seconds:02d}"
 
     context = {
         'popular_videos': popular_videos,

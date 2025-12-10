@@ -1,82 +1,6 @@
 {% extends "base.html" %}
 {% block title %}마이페이지 | 2beats{% endblock %}
 {% block extra_head %}
-<style>
-  /* 프로필 이미지 섹션 스타일 */
-  .profile-image-section {
-    margin-bottom: 20px;
-  }
-  
-  .image-preview-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin: 12px 0;
-  }
-  
-  .avatar-preview {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(192,132,252,0.3);
-    background: #0c0a18;
-    transition: opacity 0.3s ease;
-  }
-  
-  .avatar-placeholder {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 2px dashed rgba(255,255,255,0.2);
-    display: grid;
-    place-items: center;
-    color: rgba(255,255,255,0.4);
-    font-size: 12px;
-    background: #0c0a18;
-  }
-  
-  .image-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .delete-image-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: rgba(255,255,255,0.6);
-    font-size: 14px;
-    cursor: pointer;
-    user-select: none;
-    transition: color 0.2s ease;
-  }
-  
-  .delete-image-checkbox:hover {
-    color: #ff6b6b;
-  }
-  
-  .delete-image-checkbox input[type="checkbox"] {
-    cursor: pointer;
-    width: 16px;
-    height: 16px;
-    accent-color: #ff6b6b;
-  }
-  
-  /* 미리보기 이미지 숨김 처리 */
-  #preview-avatar {
-    display: none;
-  }
-  
-  #preview-avatar.active {
-    display: block;
-  }
-  
-  #current-avatar.dimmed {
-    opacity: 0.3;
-  }
-</style>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('{{ form.profile_image.id_for_label }}');
@@ -84,45 +8,42 @@
     const current = document.getElementById('current-avatar');
     const deleteCheckbox = document.getElementById('delete-profile-image');
 
-    // 파일 선택 시 미리보기
     if (fileInput) {
       fileInput.addEventListener('change', (e) => {
         const [file] = e.target.files || [];
         if (!file) {
-          preview.classList.remove('active');
-          if (current) current.classList.remove('dimmed');
+          preview.style.display = 'none';
+          if (current) current.style.opacity = 1;
           return;
         }
-        
         const url = URL.createObjectURL(file);
         preview.src = url;
-        preview.classList.add('active');
-        if (current) current.classList.add('dimmed');
+        preview.style.display = 'block';
+        if (current) current.style.opacity = 0.4;
         
         // 새 파일 선택 시 삭제 체크박스 해제
         if (deleteCheckbox) deleteCheckbox.checked = false;
       });
     }
     
-    // 삭제 체크박스 클릭 시 파일 입력 초기화
+    // 삭제 체크박스 클릭 시 처리
     if (deleteCheckbox) {
       deleteCheckbox.addEventListener('change', (e) => {
         if (e.target.checked) {
-          // 체크 시 파일 입력 초기화하고 미리보기 제거
           if (fileInput) fileInput.value = '';
-          preview.classList.remove('active');
-          if (current) current.classList.add('dimmed');
+          preview.style.display = 'none';
+          if (current) current.style.opacity = 0.4;
         } else {
-          // 체크 해제 시 원래대로
-          if (current) current.classList.remove('dimmed');
+          if (current) current.style.opacity = 1;
         }
       });
     }
     
-    // 전화번호 숫자만 입력 가능
+    // 2. 전화번호 숫자만 입력 가능하도록 제한 (추가된 코드)
     const phoneInput = document.getElementById('{{ form.phone_number.id_for_label }}');
     if (phoneInput) {
       phoneInput.addEventListener('input', (e) => {
+        // 입력된 값에서 숫자가 아닌 문자는 모두 빈 문자열로 치환
         e.target.value = e.target.value.replace(/[^0-9]/g, '');
       });
     }
@@ -196,46 +117,27 @@
         </div>
       </div>
 
-      <!-- 개선된 프로필 이미지 섹션 -->
-      <div class="profile-image-section">
+      <div style="margin-bottom:14px;">
         <label for="{{ form.profile_image.id_for_label }}" class="muted">프로필 이미지</label>
-        
-        <div class="image-preview-wrapper">
-          <!-- 현재 이미지 -->
+        <div style="display:flex; align-items:center; gap:14px; margin:8px 0;">
           {% if request.user.profile_image %}
-            <img src="{{ request.user.profile_image.url }}" 
-                 alt="현재 프로필" 
-                 class="avatar-preview" 
-                 id="current-avatar">
+            <img src="{{ request.user.profile_image.url }}" alt="현재 프로필" class="avatar" id="current-avatar" style="width:72px; height:72px; border-radius:50%; object-fit:cover; border:1px solid var(--border); background:#0c0a18;">
           {% else %}
-            <div class="avatar-placeholder" id="current-avatar">
-              <span>이미지 없음</span>
-            </div>
+            <div id="current-avatar" style="width:72px; height:72px; border-radius:50%; border:1px solid var(--border); display:grid; place-items:center; color:var(--muted); font-size:12px; background:#0c0a18;">No image</div>
           {% endif %}
-          
-          <!-- 미리보기 이미지 -->
-          <img src="" 
-               alt="미리보기" 
-               id="preview-avatar" 
-               class="avatar-preview">
-          
-          <!-- 이미지 컨트롤 -->
-          <div class="image-controls">
-            <!-- 파일 선택 -->
-            {{ form.profile_image }}
-            
-            <!-- 이미지 삭제 체크박스 (기존 이미지가 있을 때만 표시) -->
-            {% if request.user.profile_image %}
-              <label class="delete-image-checkbox">
-                <input type="checkbox" 
-                       name="delete_profile_image" 
-                       id="delete-profile-image" 
-                       value="1">
-                <span>이미지 삭제</span>
-              </label>
-            {% endif %}
-          </div>
+          <img src="" alt="미리보기" id="preview-avatar" style="display:none; width:72px; height:72px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
         </div>
+        {{ form.profile_image }}
+        
+        <!-- ✅ 이미지 삭제 체크박스 추가 (여기만 추가됨!) -->
+        {% if request.user.profile_image %}
+          <div style="margin-top:8px;">
+            <label style="display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.6); font-size:13px; cursor:pointer;">
+              <input type="checkbox" name="delete_profile_image" id="delete-profile-image" value="1" style="cursor:pointer;">
+              <span>이미지 삭제</span>
+            </label>
+          </div>
+        {% endif %}
         
         {% if form.profile_image.errors %}
           <ul class="errorlist" style="margin:6px 0 0; padding:0; list-style:none; color:#fecaca; font-size:12px;">
@@ -244,7 +146,7 @@
         {% endif %}
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
         <a class="muted" href="/">메인으로</a>
         <div style="display:flex; gap:8px;">
           <a class="muted" href="{% url 'logout' %}">로그아웃</a>

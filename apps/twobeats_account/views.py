@@ -49,10 +49,32 @@ def signup(request):
 
 @login_required(login_url='/account/login/')
 def profile(request):
+    """
+    프로필 페이지 - 이미지 삭제 기능 추가
+    """
     if request.method == 'POST':
+        # 1️⃣ 이미지 삭제 체크박스 처리 (폼 검증 전에 먼저 처리)
+        if request.POST.get('delete_profile_image') == '1':
+            if request.user.profile_image:
+                # 기존 파일 삭제
+                request.user.profile_image.delete(save=False)
+                request.user.profile_image = None
+                request.user.save()
+                messages.success(request, '프로필 이미지가 삭제되었습니다.')
+                return redirect('profile')
+        
+        # 2️⃣ 폼 검증 및 저장
         form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            form.save()
+            user = form.save(commit=False)
+            
+            # 새 이미지가 업로드되었을 때만 기존 이미지 삭제
+            if 'profile_image' in request.FILES:
+                # 기존 이미지가 있다면 삭제
+                if request.user.profile_image:
+                    request.user.profile_image.delete(save=False)
+            
+            user.save()
             messages.success(request, '정보가 저장되었습니다.')
             return redirect('profile')
     else:

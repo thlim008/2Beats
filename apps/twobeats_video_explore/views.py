@@ -522,38 +522,22 @@ def stream_video(request, video_id):
 @login_required
 def download_video(request, video_id):
     """
-    영상 파일을 다운로드합니다.
-
-    로그인한 사용자만 다운로드 가능합니다.
+    S3 영상 파일을 다운로드합니다.
     """
-    # 1. Video 객체 가져오기
+    from django.shortcuts import redirect
+
+    # Video 객체 가져오기
     video = get_object_or_404(Video, pk=video_id)
 
-    # 2. 파일이 실제로 존재하는지 확인
+    # 파일 존재 확인
     if not video.video_root:
         return JsonResponse(
             {"error": "이 영상에는 비디오 파일이 없습니다."},
             status=404
         )
 
-    # 3. 파일 확장자에 따라 MIME type 자동 감지
-    content_type, _ = mimetypes.guess_type(video.video_root.path)
-    if not content_type:
-        content_type = 'video/mp4'  # 기본값
-
-    # 4. 파일 다운로드 응답 생성
-    # FileField.open() 사용 - Django가 자동으로 파일 관리 (close() 포함)
-    video.video_root.open('rb')
-
-    from django.http import FileResponse
-    response = FileResponse(
-        video.video_root,
-        as_attachment=True,  # 다운로드 강제 (브라우저에서 열지 않고 저장)
-        filename=f"{video.video_title}.mp4",
-        content_type=content_type
-    )
-
-    return response
+    # S3 URL로 바로 리다이렉트
+    return redirect(video.video_root.url)
 
 
 def video_chart_all(request):

@@ -31,7 +31,6 @@ def music_list(request):
         .prefetch_related('tags')
     )
     
-    # 정렬
     if sort == 'oldest':
         musics = musics.order_by('music_created_at')
     elif sort == 'title':
@@ -112,7 +111,6 @@ def video_list(request):
         .prefetch_related('tags')
     )
     
-    # 정렬
     if sort == 'oldest':
         videos = videos.order_by('video_created_at')
     elif sort == 'title':
@@ -181,6 +179,32 @@ def video_delete(request, pk):
 
 
 # ============================================
+# 🔥 Helper: temp 파일을 정식 경로로 이동
+# ============================================
+
+def move_temp_to_permanent(temp_path, permanent_prefix):
+    """temp 파일을 정식 경로로 이동하고 temp 삭제"""
+    try:
+        # 새 경로 생성
+        file_name = os.path.basename(temp_path)
+        # 타임스탬프 제거 (1234567890.123_filename.mp3 → filename.mp3)
+        clean_name = '_'.join(file_name.split('_')[1:]) if '_' in file_name else file_name
+        new_path = f'{permanent_prefix}/{clean_name}'
+        
+        # 파일 복사
+        with default_storage.open(temp_path, 'rb') as source:
+            permanent_path = default_storage.save(new_path, source)
+        
+        # temp 파일 삭제
+        default_storage.delete(temp_path)
+        
+        return permanent_path
+    except Exception as e:
+        print(f"❌ 파일 이동 실패: {temp_path} → {e}")
+        return temp_path  # 실패 시 원본 경로 반환
+
+
+# ============================================
 # 🔥 음악/영상 업로드 시작 (세션 방식)
 # ============================================
 
@@ -193,7 +217,7 @@ def music_upload_start(request):
             music_file = form.cleaned_data['music_root']
             base_title = os.path.splitext(music_file.name)[0]
             
-            # 🔥 중복 체크 (1분 이내)
+            # 중복 체크
             one_min_ago = timezone.now() - timedelta(minutes=1)
             recent_duplicate = Music.objects.filter(
                 uploader=request.user,
@@ -204,7 +228,7 @@ def music_upload_start(request):
             if recent_duplicate:
                 return redirect('twobeats_upload:music_list')
             
-            # 🔥 세션에 임시 저장 (user.pk 사용!)
+            # 세션에 임시 저장
             user_id = request.user.pk if request.user.is_authenticated else 'anonymous'
             temp_filename = f'temp/{user_id}/{timezone.now().timestamp()}_{music_file.name}'
             temp_path = default_storage.save(temp_filename, ContentFile(music_file.read()))
@@ -236,14 +260,18 @@ def music_update_new(request):
     if request.method == 'POST':
         form = MusicForm(request.POST, request.FILES)
         if form.is_valid():
-            # 🔥 여기서 최종 DB 저장!
             music = form.save(commit=False)
             music.uploader = request.user
-            music.music_root.name = temp_data['file_path']
+            
+            # 🔥 temp → 정식 경로로 이동
+            temp_path = temp_data['file_path']
+            permanent_path = move_temp_to_permanent(temp_path, 'music')
+            music.music_root.name = permanent_path
+            
             music.save()
             form.save_m2m()
             
-            # 🔥 세션 정리
+            # 세션 정리
             del request.session['temp_music']
             
             return redirect('twobeats_upload:music_detail', pk=music.pk)
@@ -294,12 +322,11 @@ def video_upload_start(request):
             if recent_duplicate:
                 return redirect('twobeats_upload:video_list')
             
-            # 🔥 user.pk 사용!
             user_id = request.user.pk if request.user.is_authenticated else 'anonymous'
             temp_filename = f'temp/{user_id}/{timezone.now().timestamp()}_{video_file.name}'
             temp_path = default_storage.save(temp_filename, ContentFile(video_file.read()))
             
-            # 🔥 썸네일 자동 생성
+            # 썸네일 자동 생성
             thumbnail_path = None
             try:
                 import cv2
@@ -368,11 +395,17 @@ def video_update_new(request):
         if form.is_valid():
             video = form.save(commit=False)
             video.video_user = request.user
-            video.video_root.name = temp_data['file_path']
             
-            # 썸네일이 세션에 있으면 적용
+            # 🔥 temp → 정식 경로로 이동 (비디오)
+            temp_path = temp_data['file_path']
+            permanent_path = move_temp_to_permanent(temp_path, 'videos')
+            video.video_root.name = permanent_path
+            
+            # 🔥 temp → 정식 경로로 이동 (썸네일)
             if temp_data.get('thumbnail_path') and not request.FILES.get('video_thumbnail'):
-                video.video_thumbnail.name = temp_data['thumbnail_path']
+                thumb_temp = temp_data['thumbnail_path']
+                thumb_permanent = move_temp_to_permanent(thumb_temp, 'thumbnails/video')
+                video.video_thumbnail.name = thumb_permanent
             
             video.save()
             form.save_m2m()

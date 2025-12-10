@@ -541,6 +541,7 @@
         {% block content %}{% endblock %}
     </div>
 
+    {% if not is_plivideo %}
     <div id="bottom-player">
         <div class="player-content">
             <div class="player-info">
@@ -584,6 +585,7 @@
     </div>
 
     <audio id="global-audio"></audio>
+    {% endif %}
 
     <script>
         // ===== 유틸리티 함수 =====

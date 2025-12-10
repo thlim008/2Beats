@@ -154,10 +154,12 @@ def playlist_detail(request, playlist_id):
         playlist = get_object_or_404(MusicPlaylist, id=playlist_id, user=request.user)
         items = playlist.tracks.select_related('music').order_by('order')
         is_music = True
+        is_plivideo = False
     else:
         playlist = get_object_or_404(VideoPlaylist, id=playlist_id, user=request.user)
         items = playlist.clips.select_related('video').order_by('order')
         is_music = False
+        is_plivideo = True
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -193,6 +195,7 @@ def playlist_detail(request, playlist_id):
             'playlist': playlist,
             'items': items,
             'is_music': is_music,
+            'is_plivideo': is_plivideo,
             'kind': kind,
             # 'form': form, # 폼 제거
         },

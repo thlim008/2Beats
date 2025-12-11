@@ -37,6 +37,19 @@
     color: var(--text);
   }
   .rk-table th { color: var(--muted); font-weight: 600; }
+
+  /* [추가] 랭킹 제목 링크 스타일 */
+  .rank-link {
+    text-decoration: none;
+    color: var(--text);
+    font-weight: bold;
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .rank-link:hover {
+    color: #c084fc; /* 마우스 올리면 보라색 */
+    text-decoration: underline;
+  }
 </style>
 {% endblock %}
 
@@ -69,7 +82,9 @@
           <tr>
             <td>{{ forloop.counter }}</td>
             <td>
-                <span style="color:var(--text); font-weight:bold;">{{ item.music_title }}</span>
+                <a href="{% url 'music_explore:detail' item.id %}" class="rank-link">
+                    {{ item.music_title }}
+                </a>
             </td>
             <td class="muted">{{ item.music_singer }}</td>
             <td class="muted">{{ item.total_score }}점 ({{ item.win_count }}회 우승)</td>

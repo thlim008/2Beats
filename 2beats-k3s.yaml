@@ -1,0 +1,81 @@
+# 1. 데이터베이스 설정 (Postgres)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        # [수정] env 직접 입력 대신 Secret 전체를 가져오기
+        envFrom:
+        - secretRef:
+            name: twobeats-secrets
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+---
+# 2. 웹 서버 설정 (Django)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: wasanssss/2beats:v1.3  # 본인 이미지 ID 확인
+        ports:
+        - containerPort: 8000
+        # [수정] 여기도 Secret 전체 가져오기 (DB정보, AWS키 등 모두 포함됨)
+        envFrom:
+        - secretRef:
+            name: twobeats-secrets
+        # 추가로 필요한 환경변수만 따로 정의 (예: DB 호스트 주소)
+        env:
+        - name: DATABASE_URL
+          # K8s 내부에서는 서비스 이름('db')이 곧 호스트 주소가 됩니다.
+          value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@db:5432/$(POSTGRES_DB)"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app: web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
